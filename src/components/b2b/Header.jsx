@@ -106,16 +106,7 @@ const [mobileMenuOpen, setMobileMenuOpen] =
               {openMenu === 'dress' && (
   <div className="absolute left-0 top-full pt-5 z-[99999]">
     <div
-      className="
-        w-[245px]
-        bg-[#F7F3F1]
-        rounded-[18px]
-        overflow-hidden
-        shadow-2xl
-        border border-[#E5D9DD]
-        relative
-        z-[99999]
-      "
+      className="w-[245px] bg-[#F7F3F1] rounded-[18px] overflow-hidden shadow-2xl border border-[#E5D9DD] relative z-[99999]"
     >
 
       <Link
@@ -158,16 +149,7 @@ const [mobileMenuOpen, setMobileMenuOpen] =
               {openMenu === 'tops' && (
   <div className="absolute left-0 top-full pt-5 z-[99999]">
     <div
-      className="
-        w-[245px]
-        bg-[#F7F3F1]
-        rounded-[18px]
-        overflow-hidden
-        shadow-2xl
-        border border-[#E5D9DD]
-        relative
-        z-[99999]
-      "
+      className="w-[245px] bg-[#F7F3F1] rounded-[18px] overflow-hidden shadow-2xl border border-[#E5D9DD] relative z-[99999]"
     >
 
       <Link
@@ -210,16 +192,7 @@ const [mobileMenuOpen, setMobileMenuOpen] =
             {openMenu === 'bottom' && (
   <div className="absolute left-0 top-full pt-5 z-[99999]">
     <div
-      className="
-        w-[245px]
-        bg-[#F7F3F1]
-        rounded-[18px]
-        overflow-hidden
-        shadow-2xl
-        border border-[#E5D9DD]
-        relative
-        z-[99999]
-      "
+      className="w-[245px] bg-[#F7F3F1] rounded-[18px] overflow-hidden shadow-2xl border border-[#E5D9DD] relative z-[99999]"
     >
 
       <Link
@@ -262,16 +235,7 @@ const [mobileMenuOpen, setMobileMenuOpen] =
               {openMenu === 'accessories' && (
   <div className="absolute left-0 top-full pt-5 z-[99999]">
     <div
-      className="
-        w-[245px]
-        bg-[#F7F3F1]
-        rounded-[18px]
-        overflow-hidden
-        shadow-2xl
-        border border-[#E5D9DD]
-        relative
-        z-[99999]
-      "
+      className="w-[245px] bg-[#F7F3F1] rounded-[18px] overflow-hidden shadow-2xl border border-[#E5D9DD] relative z-[99999]"
     >
 
       <Link
@@ -314,16 +278,7 @@ const [mobileMenuOpen, setMobileMenuOpen] =
              {openMenu === 'home' && (
   <div className="absolute left-0 top-full pt-5 z-[99999]">
     <div
-      className="
-        w-[245px]
-        bg-[#F7F3F1]
-        rounded-[18px]
-        overflow-hidden
-        shadow-2xl
-        border border-[#E5D9DD]
-        relative
-        z-[99999]
-      "
+      className="w-[245px] bg-[#F7F3F1] rounded-[18px] overflow-hidden shadow-2xl border border-[#E5D9DD] relative z-[99999]"
     >
 
       <Link

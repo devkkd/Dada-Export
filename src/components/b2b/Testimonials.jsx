@@ -75,16 +75,7 @@ const reviews = [
               {[...reviews, ...reviews].map((review, index) => (
                 <div
                   key={index}
-                  className="
-                    bg-[#FFFEF9] border border-[#E5D9C8] rounded-[16px]
-                    flex-shrink-0 flex flex-col justify-between
-                    transition-all duration-300 hover:-translate-y-2 hover:shadow-xl
-                    w-[220px] h-[240px] p-4
-                    sm:w-[270px] sm:h-[260px] sm:p-5
-                    md:w-[340px] md:h-[280px] md:p-6
-                    lg:w-[400px] lg:h-[300px] lg:p-7
-                    xl:w-[430px] xl:h-[300px] xl:p-8
-                  "
+                  className="bg-[#FFFEF9] border border-[#E5D9C8] rounded-[16px] flex-shrink-0 flex flex-col justify-between transition-all duration-300 hover:-translate-y-2 hover:shadow-xl w-[220px] h-[240px] p-4 sm:w-[270px] sm:h-[260px] sm:p-5 md:w-[340px] md:h-[280px] md:p-6 lg:w-[400px] lg:h-[300px] lg:p-7 xl:w-[430px] xl:h-[300px] xl:p-8"
                 >
                   {/* Stars */}
                   <div className="text-[#95565E] tracking-[2px] sm:tracking-[3px] text-[11px] sm:text-[12px] md:text-sm mb-2 sm:mb-3 md:mb-6 shrink-0">
@@ -92,15 +83,7 @@ const reviews = [
                   </div>
 
                   {/* Review text */}
-                  <p className="
-                    text-[#0E0E0E] flex-1 overflow-hidden
-                    text-[11px] leading-[1.45]
-                    sm:text-[12px] sm:leading-[1.5]
-                    md:text-[13px] md:leading-[1.55]
-                    lg:text-[15px] lg:leading-[1.6]
-                    xl:text-[16px]
-                    line-clamp-4 sm:line-clamp-4 md:line-clamp-4 lg:line-clamp-5
-                  ">
+                  <p className="text-[#0E0E0E] flex-1 overflow-hidden text-[11px] leading-[1.45] sm:text-[12px] sm:leading-[1.5] md:text-[13px] md:leading-[1.55] lg:text-[15px] lg:leading-[1.6] xl:text-[16px] line-clamp-4 sm:line-clamp-4 md:line-clamp-4 lg:line-clamp-5">
                     {review.text}
                   </p>
 

@@ -280,20 +280,7 @@ export default function NewArrivalSection() {
 
                     {/* See More Button */}
                     <button
-                        className="
-      w-[200px]
-      h-[52px]
-      rounded-full
-      bg-[#FEE6C3]
-      text-[#0E0E0E]
-      text-[16px]
-      font-medium
-      transition-all
-      duration-300
-      hover:bg-[#281000]
-      hover:text-white
-      hover:scale-105
-    "
+                        className="w-[200px] h-[52px] rounded-full bg-[#FEE6C3] text-[#0E0E0E] text-[16px] font-medium transition-all duration-300 hover:bg-[#281000] hover:text-white hover:scale-105"
                     >
                         SEE MORE
                     </button>
@@ -306,15 +293,7 @@ export default function NewArrivalSection() {
                                 behavior: 'smooth',
                             })
                         }
-                        className="
-      mt-8
-      text-[#0E0E0E]
-      text-[14px]
-      font-medium
-      tracking-tight
-      hover:text-[#95565E]
-      transition-colors
-    "
+                        className="mt-8 text-[#0E0E0E] text-[14px] font-medium tracking-tight hover:text-[#95565E] transition-colors"
                     >
                         ↑ BACK TO TOP
                     </button>

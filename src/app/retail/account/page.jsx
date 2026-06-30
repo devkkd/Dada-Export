@@ -306,18 +306,7 @@ export default function AccountPage() {
           .replace(/([A-Z])/g, ' $1')
           .replace(/^./, (str) => str.toUpperCase())
       }
-      className="
-        h-12
-        border
-        border-[#D8C8BC]
-        rounded-lg
-        px-4
-        text-[#0E0E0E]
-        placeholder:text-[#0E0E0E]/30
-        placeholder:font-medium
-        outline-none
-        focus:border-[#281000]
-      "
+      className="h-12 border border-[#D8C8BC] rounded-lg px-4 text-[#0E0E0E] placeholder:text-[#0E0E0E]/30 placeholder:font-medium outline-none focus:border-[#281000]"
     />
   ))}
 
