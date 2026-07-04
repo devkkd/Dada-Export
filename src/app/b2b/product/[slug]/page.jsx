@@ -10,6 +10,7 @@ const products = [
     slug: 'botanical-halter-maxi',
     category: 'Dresses',
     img: '/b2b/home/7.png',
+    hoverImg: '/b2b/home/8.png',
     title: 'Botanical Halter Maxi',
     desc: 'Adjustable back strap · Back tie-up · Floor length · Breathable rayon · 100% Premium Rayon · Halter Maxi Dress',
     colors: ['#4A7043', '#2B4C7A', '#95565E', '#3C2F2F'],
@@ -19,6 +20,7 @@ const products = [
     slug: 'floral-summer-dress',
     category: 'Dresses',
     img: '/b2b/home/8.png',
+    hoverImg: '/b2b/home/7.png',
     title: 'Floral Summer Dress',
     desc: 'Soft rayon fabric · Lightweight · Printed design · Comfortable fit',
     colors: ['#4A7043', '#2B4C7A', '#95565E'],
@@ -28,6 +30,7 @@ const products = [
     slug: 'casual-printed-top',
     category: 'Tops',
     img: '/b2b/home/9.png',
+    hoverImg: '/b2b/home/10.png',
     title: 'Casual Printed Top',
     desc: 'Premium rayon · Breathable fabric · Everyday comfort · Stylish look',
     colors: ['#2B4C7A', '#95565E', '#3C2F2F'],
@@ -37,19 +40,24 @@ const products = [
     slug: 'boho-crop-top',
     category: 'Tops',
     img: '/b2b/home/10.png',
+    hoverImg: '/b2b/home/9.png',
     title: 'Boho Crop Top',
     desc: 'Relaxed fit · Soft fabric · Trendy silhouette · Export quality',
     colors: ['#4A7043', '#95565E', '#3C2F2F'],
   },
 ];
 
-export default function ProductDetail({ params }) {
-  const [selectedColor, setSelectedColor] = useState('#4A7043');
-const [selectedSize, setSelectedSize] = useState('Free Size');
-const [quantity, setQuantity] = useState(50);
-const [mainImage, setMainImage] = useState('/b2b/NewArrivals/1.png');
+import { use } from "react";
 
-  const slug = params.slug;
+export default function ProductDetail({ params }) {
+
+  const { slug } = use(params);
+
+  const [selectedColor, setSelectedColor] = useState('#4A7043');
+  const [selectedSize, setSelectedSize] = useState('Free Size');
+  const [activeImage, setActiveImage] = useState({});
+  const [quantity, setQuantity] = useState(50);
+  const [mainImage, setMainImage] = useState('/b2b/NewArrivals/1.png');
   const product = products.find(p => p.slug === slug) || {
     title: 'Women Olive Floral Adjustable Halter Neck Maxi Dress',
     price: '₹1,01,000',
@@ -104,7 +112,24 @@ const [mainImage, setMainImage] = useState('/b2b/NewArrivals/1.png');
           {/* Left Side - Images */}
           <div className="space-y-6">
             {/* Main Image */}
-            <div className="aspect-[4/5] relative rounded-3xl overflow-hidden shadow-2xl bg-white">
+      <div
+  className="
+    relative
+    w-full
+   h-[260px]
+sm:h-[340px]
+md:h-[420px]
+lg:h-[500px]
+xl:h-[580px]
+2xl:h-[650px]
+    rounded-[24px]
+    overflow-hidden
+    border
+    border-[#E8DED8]
+  "
+>
+
+
               <Image 
                 src={mainImage} 
                 alt={product.title} 
@@ -205,7 +230,7 @@ const [mainImage, setMainImage] = useState('/b2b/NewArrivals/1.png');
     <button
       onClick={() =>
         setQuantity((prev) =>
-          prev > 50 ? prev - 1 : 50
+         prev > 50 ? Math.max(50, prev - 10) : 50
         )
       }
       className="text-[32px] leading-none font-light text-black"
@@ -219,7 +244,7 @@ const [mainImage, setMainImage] = useState('/b2b/NewArrivals/1.png');
 
     <button
       onClick={() =>
-        setQuantity((prev) => prev + 1)
+        setQuantity((prev) => prev + 10)
       }
       className="text-[32px] leading-none font-light text-black"
     >
@@ -422,7 +447,7 @@ const [mainImage, setMainImage] = useState('/b2b/NewArrivals/1.png');
             Similar Products
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 md:gap-8">
             {similarProducts.map((prod) => (
               <Link
                 key={prod.id}
@@ -430,43 +455,96 @@ const [mainImage, setMainImage] = useState('/b2b/NewArrivals/1.png');
                 className="group block bg-white rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300"
               >
                 {/* Product Image */}
-                <div className="relative h-[350px] md:h-[380px] overflow-hidden bg-gray-100 rounded-2xl">
-                  <Image
-                    src={prod.img}
-                    alt={prod.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                </div>
+               <div
+  className="relative h-[220px] sm:h-[320px] lg:h-[380px] overflow-hidden rounded-2xl bg-gray-100"
+
+  onMouseEnter={() =>
+    setActiveImage(prev => ({
+      ...prev,
+      [prod.id]: true,
+    }))
+  }
+
+  onMouseLeave={() =>
+    setActiveImage(prev => ({
+      ...prev,
+      [prod.id]: false,
+    }))
+  }
+
+  onTouchStart={() =>
+    setActiveImage(prev => ({
+      ...prev,
+      [prod.id]: true,
+    }))
+  }
+
+  onTouchEnd={() =>
+    setActiveImage(prev => ({
+      ...prev,
+      [prod.id]: false,
+    }))
+  }
+>
+
+  {/* Main Image */}
+
+  <Image
+    src={prod.img}
+    alt={prod.title}
+    fill
+    className={`object-cover transition-all duration-500 ${
+      activeImage[prod.id]
+        ? 'opacity-0 scale-105'
+        : 'opacity-100'
+    }`}
+  />
+
+  {/* Hover Image */}
+
+  <Image
+    src={prod.hoverImg || prod.img}
+    alt={prod.title}
+    fill
+    className={`object-cover transition-all duration-500 ${
+      activeImage[prod.id]
+        ? 'opacity-100 scale-105'
+        : 'opacity-0'
+    }`}
+  />
+
+</div>
 
                 {/* Content */}
-                <div className="p-5 md:p-6">
-                  <h3 className="text-base md:text-lg font-bold text-[#0E0E0E] mb-3 leading-tight line-clamp-2">
+<div className="p-3 sm:p-6">
+                <h3 className="text-[15px] sm:text-xl font-bold text-[#0E0E0E] mb-2 line-clamp-1">
                     {prod.title}
                   </h3>
 
-                  <p className="text-xs md:text-sm text-[#3C2F2F] leading-relaxed line-clamp-2 mb-5">
+                 <p className="text-[11px] sm:text-[14px] text-[#3C2F2F] leading-5 line-clamp-2 sm:line-clamp-3 mb-3 sm:mb-5">
                     {prod.desc}
                   </p>
 
                   {/* Footer with Button and Colors */}
-                  <div className="flex items-center justify-between gap-3">
-                    <button className="px-4 md:px-5 py-2 border border-[#95565E] text-[#95565E] rounded-full text-xs md:text-sm font-medium hover:bg-[#95565E] hover:text-white transition-all duration-300 whitespace-nowrap">
-                      Enquire →
-                    </button>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-5">
 
-                    {/* Color Dots */}
-                    <div className="flex items-center gap-2">
-                      {prod.colors.map((color, i) => (
-                        <button
-                          key={i}
-                          className="w-3 h-3 md:w-3 md:h-3 rounded-full shadow-sm hover:scale-110 transition-transform"
-                          style={{ backgroundColor: color }}
-                          title={`Color option ${i + 1}`}
-                        />
-                      ))}
-                    </div>
-                  </div>
+  {/* Colors */}
+  <div className="order-1 sm:order-2 flex items-center justify-center sm:justify-end gap-2">
+    {prod.colors.map((color, i) => (
+      <button
+        key={i}
+        className="w-3 h-3 sm:w-4 sm:h-4 rounded-full hover:scale-110 transition-transform"
+        style={{ backgroundColor: color }}
+      />
+    ))}
+  </div>
+
+  {/* Enquire */}
+  <button className="order-2 sm:order-1 w-full sm:w-auto px-3 sm:px-5 py-2 border border-[#95565E] text-[#95565E] rounded-full text-[11px] sm:text-sm font-medium hover:bg-[#95565E] hover:text-white transition-all">
+    Enquire →
+  </button>
+
+</div>
                 </div>
               </Link>
             ))}

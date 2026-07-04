@@ -166,79 +166,89 @@ export default function SurpriseGiftBanner() {
         }
 
         /* ── MOBILE (max 640px) — vertical stacked layout ── */
-        @media (max-width: 640px) {
-          .sgb-wrapper {
-            padding: 16px 14px;
-          }
+       @media (max-width: 640px) {
 
-          .sgb-card {
-            flex-direction: column;
-            align-items: stretch;
-            min-height: unset;
-            border-radius: 14px;
-          }
+  .sgb-wrapper{
+    padding:16px;
+  }
 
-          /* On mobile: top section has bow + text side by side */
-          .sgb-top-row {
-            display: flex;
-            align-items: center;
-            position: relative;
-          }
+  .sgb-card{
+    min-height:230px;
+    display:flex;
+    flex-direction:row;
+    align-items:flex-start;
+    border-radius:18px;
+    overflow:hidden;
+    position:relative;
+}
 
-          .sgb-strip-v {
-            left: 56px;
-          }
+  /* Vertical ribbon */
+  .sgb-strip-v{
+    left:54px;
+    width:6px;
+  }
 
-          /* Reposition horizontal strip for mobile card height */
-          .sgb-strip-h {
-            top: 34px;
-          }
+  /* Horizontal ribbon */
+  .sgb-strip-h{
+    top:34px;
+    height:6px;
+  }
 
-          .sgb-bow-col {
-            width: 90px;
-            flex-shrink: 0;
-            left: 6px;
-            top: -18px;
-          }
+  /* Bow */
+  .sgb-bow-col{
+    width:90px;
+    left:10px;
+    top:-100px;
+    justify-content:center;
+  }
 
-          .sgb-bow-col svg {
-            width: 76px;
-            height: 70px;
-          }
+  .sgb-bow-col svg{
+    width:74px;
+    height:auto;
+  }
 
-          .sgb-content {
-            padding: 16px 16px 12px 8px;
-          }
+  /* Text */
+ .sgb-content{
+    flex:1;
+    padding:58px 16px 75px 8px;
+}
 
-          .sgb-eyebrow {
-            font-size: 9px;
-            letter-spacing: 0.12em;
-            margin-bottom: 5px;
-          }
+  .sgb-eyebrow{
+    font-size:9px;
+    letter-spacing:.14em;
+    margin-bottom:6px;
+  }
 
-          .sgb-headline {
-            font-size: 15px;
-            line-height: 1.25;
-            margin-bottom: 5px;
-          }
+  .sgb-headline{
+    font-size:17px;
+    line-height:1.25;
+    margin-bottom:8px;
+  }
 
-          .sgb-desc {
-            font-size: 11.5px;
-            line-height: 1.5;
-          }
+  .sgb-desc{
+    font-size:12px;
+    line-height:1.55;
+  }
 
-          .sgb-btn-col {
-            padding: 4px 16px 18px 16px;
-          }
+  /* Button */
+  .sgb-btn-col{
+    position:absolute;
+    left:95px;
+    right:16px;
+    bottom:16px;
+    padding:0;
+}
 
-          .sgb-btn {
-            width: 100%;
-            text-align: center;
-            font-size: 13px;
-            padding: 13px 20px;
-            border-radius: 100px;
-          }
-        }
+  .sgb-btn{
+    width:100%;
+    height:48px;
+    border-radius:999px;
+    font-size:14px;
+    font-weight:700;
+    padding:0;
+}
+
+}
 
         /* ── VERY SMALL (max 380px) ── */
         @media (max-width: 380px) {

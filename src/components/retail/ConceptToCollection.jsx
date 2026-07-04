@@ -16,7 +16,7 @@ const ConceptToCollection = () => {
    <section
   className="w-full bg-[#FFF7F2]"
 >
-  <div className="max-w-[1600px] mx-auto px-8 md:px-12 lg:px-20 xl:px-24 pt-12 pb-35">    {/* Header */}
+ <div className="max-w-[1600px] mx-auto px-4 sm:px-8 md:px-12 lg:px-20 xl:px-24 pt-10 sm:pt-12 pb-12 sm:pb-20">{/* Header */}
       <div className="mb-12 md:mb-16 lg:mb-20">
 
   {/* Top Row */}
@@ -43,31 +43,32 @@ const ConceptToCollection = () => {
     </div>
 
     {/* Right */}
-    <div className="flex justify-center lg:justify-end">
-      <a
-        href="https://instagram.com/dada_exports"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-3 group"
-      >
-        <Image
-          src="/instagram-logo-vector-illustrati 2-2.png"
-          alt="Instagram"
-          width={32}
-          height={32}
-          className="w-8 h-8"
-        />
+<div className="flex justify-center lg:justify-end mt-3 lg:mt-0">
+  <a
+    href="https://www.instagram.com/ivearaa?igsh=MWZmdzAwdTR5ZHR6Nw=="
+    target="_blank"
+    rel="noopener noreferrer"
+    className="flex items-center gap-3 group"
+  >
+    <Image
+      src="/instagram-logo-vector-illustrati 2-2.png"
+      alt="Instagram"
+      width={32}
+      height={32}
+      className="w-7 h-7 sm:w-8 sm:h-8"
+    />
 
-        <div className="text-left">
-          <p className="text-sm text-[#281000] group-hover:underline">
-            Follow Us on
-          </p>
-          <p className="font-semibold text-black">
-            @dada_exports
-          </p>
-        </div>
-      </a>
+    <div className="text-left">
+      <p className="text-xs sm:text-sm text-[#281000] group-hover:underline">
+        Follow Us on
+      </p>
+
+      <p className="font-semibold text-black text-sm sm:text-base">
+        @ivearaa
+      </p>
     </div>
+  </a>
+</div>
 
   </div>
 
@@ -81,39 +82,71 @@ const ConceptToCollection = () => {
 </div>
 
         {/* Video Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6">
-          {videos.map((video, index) => (
-            <div 
-              key={index}
-              className="group relative aspect-[4/5] bg-black rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
-            >
-              <video
-                src={video.src}
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-full object-cover"
-              />
+  {/* Desktop */}
+<div className="hidden lg:grid lg:grid-cols-3 xl:grid-cols-5 gap-6">
+  {videos.map((video, index) => (
+    <div
+      key={index}
+      className="group relative aspect-[4/5] bg-black rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
+    >
+      <video
+        src={video.src}
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="w-full h-full object-cover"
+      />
 
-              {/* Play Icon Overlay */}
-              <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-all">
-                <div className="w-12 h-12 rounded-full border-2 border-white/80 flex items-center justify-center backdrop-blur-sm">
-                  <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[14px] border-l-white border-b-[10px] border-b-transparent ml-1" />
-                </div>
-              </div>
-
-              {/* Text Overlay */}
-              {video.overlay && (
-                <div className="absolute bottom-6 left-6 right-6">
-                  <div className="bg-white/95 text-black text-sm md:text-base font-medium px-5 py-3.5 rounded-2xl shadow">
-                    {video.overlay}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+      <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-all">
+        <div className="w-12 h-12 rounded-full border-2 border-white/80 flex items-center justify-center backdrop-blur-sm">
+          <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[14px] border-l-white border-b-[10px] border-b-transparent ml-1" />
         </div>
+      </div>
+
+      {video.overlay && (
+        <div className="absolute bottom-6 left-6 right-6">
+          <div className="bg-white/95 text-black text-sm font-medium px-5 py-3 rounded-2xl shadow">
+            {video.overlay}
+          </div>
+        </div>
+      )}
+    </div>
+  ))}
+</div>
+
+{/* Mobile */}
+<div className="lg:hidden flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-hide">
+  {videos.map((video, index) => (
+    <div
+      key={index}
+      className="snap-start shrink-0 w-[48%] relative aspect-[3/5] bg-black rounded-2xl overflow-hidden"
+    >
+      <video
+        src={video.src}
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="w-full h-full object-cover"
+      />
+
+      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+        <div className="w-9 h-9 rounded-full border-2 border-white/80 flex items-center justify-center backdrop-blur-sm">
+          <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[12px] border-l-white border-b-[8px] border-b-transparent ml-1" />
+        </div>
+      </div>
+
+      {video.overlay && (
+        <div className="absolute bottom-3 left-3 right-3">
+          <div className="bg-white/95 text-black text-[10px] font-medium px-2 py-2 rounded-xl leading-snug">
+            {video.overlay}
+          </div>
+        </div>
+      )}
+    </div>
+  ))}
+</div>
       </div>
     </section>
   );

@@ -42,11 +42,11 @@ const DadaDifferenceFeatures = () => {
     ];
 
     return (
-       <section
-  className="w-full bg-[#FFFEF9]"
-  style={{ fontFamily: 'Mona Sans, sans-serif' }}
->
-    <div className="max-w-[1600px] mx-auto px-8 md:px-12 lg:px-20 xl:px-24 pt-12 pb-20">
+        <section
+            className="w-full bg-[#FFFEF9]"
+            style={{ fontFamily: 'Mona Sans, sans-serif' }}
+        >
+            <div className="max-w-[1600px] mx-auto px-8 md:px-12 lg:px-20 xl:px-24 pt-12 pb-20">
                 <div className="mb-12 md:mb-16 lg:mb-20">
 
                     <div className="relative flex flex-col lg:flex-row items-center lg:items-center justify-center">
@@ -79,26 +79,29 @@ const DadaDifferenceFeatures = () => {
                 </div>
 
                 {/* Features Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 ">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-0">
                     {features.map((feature, index) => (
                         <div
                             key={feature.id}
-                            className={`p-6 md:p-8 lg:p-10 flex flex-col items-center text-center ${index < 3
-                                    ? 'border-b border-[#D4C4B8]'
-                                    : ''
-                                } ${(index + 1) % 3 !== 0 && index < features.length - 1
-    ? 'lg:border-r lg:border-[#D4C4B8]'
-    : ''
-} ${index < 3 && index !== 2
-                                    ? 'lg:border-r lg:border-[#D4C4B8]'
-                                    : ''
-                                } ${index >= 3
-                                    ? 'border-t border-[#D4C4B8]'
-                                    : ''
-                                }`}
+                         className={`
+  p-4 sm:p-6 md:p-8 lg:p-10
+  flex flex-col items-center text-center
+  border-[#D4C4B8]
+
+  /* ---------- Mobile (2×3) ---------- */
+  ${index < 4 ? 'border-b' : ''}
+  ${(index + 1) % 2 !== 0 ? 'border-r' : ''}
+
+  /* ---------- Desktop (3×2) ---------- */
+  lg:border-b-0
+  lg:border-r-0
+
+  ${index < 3 ? 'lg:border-b' : ''}
+  ${(index + 1) % 3 !== 0 ? 'lg:border-r' : ''}
+`}
                         >
                             {/* Icon */}
-                            <div className="mb-6 md:mb-8 h-12 md:h-14 lg:h-16 w-12 md:w-14 lg:w-16 relative flex items-center justify-center">
+                           <div className="mb-4 sm:mb-6 h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 lg:h-16 lg:w-16 relative flex items-center justify-center">
                                 <Image
                                     src={feature.icon}
                                     alt={feature.title}
@@ -110,12 +113,12 @@ const DadaDifferenceFeatures = () => {
                             </div>
 
                             {/* Title */}
-                            <h3 className="text-lg md:text-xl lg:text-2xl font-medium text-[#0E0E0E] mb-3 md:mb-4 leading-tight">
+                            <h3 className="text-[15px] sm:text-lg md:text-xl lg:text-2xl font-medium text-[#0E0E0E] mb-3 md:mb-4 leading-tight">
                                 {feature.title}
                             </h3>
 
                             {/* Description */}
-                            <p className="text-[14px] font-normal leading-[160%] text-[#0E0E0E]">
+                            <p className="text-[12px] sm:text-[14px] leading-6 text-[#0E0E0E]">
                                 {feature.description}
                             </p>
                         </div>
