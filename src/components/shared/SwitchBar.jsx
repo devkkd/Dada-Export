@@ -37,24 +37,23 @@ export default function SwitchBar() {
   href="/retail"
   className="flex-1 h-[52px] sm:h-[70px] rounded-l-[35px] sm:rounded-l-[50px] bg-[#281000] text-white shadow-sm flex flex-col sm:flex-row items-center justify-center px-2"
 >
-<div className="flex items-center">
+<div className="flex items-center justify-center gap-1 min-w-0">
 
-  <Image
-    src="/retail/Union.png"
-    alt="Iveara"
-    width={80}
-    height={22}
-    className="h-4 sm:h-6 w-auto mr-2 object-contain"
-    style={{ width: 'auto', height: 'auto' }}
-  />
+ <Image
+  src="/retail/Union.png"
+  alt="Iveara"
+  width={70}
+  height={20}
+  className="h-4 sm:h-6 w-auto mr-1 sm:mr-2 object-contain flex-shrink-0"
+/>
 
   <span className="hidden lg:inline text-[14px] relative top-[3px]">
     Retail & Customization
   </span>
 
-  <span className="lg:hidden text-[12px] font-semibold relative top-[3px]">
-    Retail
-  </span>
+ <span className="lg:hidden text-[11px] font-semibold whitespace-nowrap relative top-[2px]">
+  Retail
+</span>
 
 </div>
 
