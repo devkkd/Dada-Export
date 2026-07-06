@@ -35,7 +35,7 @@ export default function CollectionsSection() {
           
           {/* Dresses */}
           <Link href="/dresses" className="group">
-           <div className="relative overflow-hidden rounded-3xl h-[320px] sm:h-[380px] md:h-[480px] mb-5">
+          <div className="relative overflow-hidden rounded-3xl h-[240px] sm:h-[300px] md:h-[420px] lg:h-[460px] xl:h-[500px] mb-5">
               <Image
                 src="/retail/home/4.png"
                 alt="Dresses"
@@ -53,7 +53,7 @@ export default function CollectionsSection() {
 
           {/* Tops */}
           <Link href="/tops" className="group">
-            <div className="relative overflow-hidden rounded-3xl h-[320px] sm:h-[380px] md:h-[480px] mb-5">
+            <div className="relative overflow-hidden rounded-3xl h-[240px] sm:h-[300px] md:h-[420px] lg:h-[460px] xl:h-[500px] mb-5">
               <Image
                 src="/retail/home/5.png"
                 alt="Tops"
@@ -70,7 +70,7 @@ export default function CollectionsSection() {
 
           {/* Bottom Wear */}
           <Link href="/bottom-wear" className="group">
-            <div className="relative overflow-hidden rounded-3xl h-[320px] sm:h-[380px] md:h-[480px] mb-5">
+          <div className="relative overflow-hidden rounded-3xl h-[240px] sm:h-[300px] md:h-[420px] lg:h-[460px] xl:h-[500px] mb-5">
               <Image
                 src="/retail/home/6.png"
                 alt="Bottom Wear"

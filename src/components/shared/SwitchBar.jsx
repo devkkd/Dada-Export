@@ -13,45 +13,54 @@ export default function SwitchBar() {
   return (
     <div className="w-full bg-[#FFFEF9] py-[4px]">
       <div className="w-full">
-        <div className="flex gap-[6px] w-full">
+        <div className="flex gap-1 sm:gap-[6px] w-full">
           
           {/* B2B Tab - DADA EXPORTS */}
           <Link
-            href="/b2b"
-            className="flex-1 h-[58px] sm:h-[70px] rounded-l-[0px] rounded-r-[50px] flex items-center justify-center text-[13px] sm:text-[14px] font-semibold bg-[#95565E] text-white shadow-sm"
-          >
-            <>
-              <span className="text-[16px] sm:text-[16px] font-semibold">
-                DADA EXPORTS
-              </span>
-              <span className="hidden sm:inline"> - B2B Wholesale & Bulk</span>
-              <span className="font-normal ml-1 sm:ml-2 text-xs sm:text-sm">
-                (For Business)
-              </span>
-            </>
-          </Link>
+  href="/b2b"
+  className="flex-1 h-[52px] sm:h-[70px] rounded-r-[35px] sm:rounded-r-[50px] bg-[#95565E] text-white shadow-sm flex flex-col sm:flex-row items-center justify-center px-2"
+>
+  <span className="text-[12px] sm:text-[16px] font-semibold leading-none">
+    DADA EXPORTS
+  </span>
 
+  <span className="hidden lg:inline ml-2 text-[14px]">
+    - B2B Wholesale & Bulk
+  </span>
+
+  <span className="text-[9px] sm:text-xs font-normal sm:ml-2 leading-none mt-0.5 sm:mt-0">
+    (For Business)
+  </span>
+</Link>
           {/* Retail Tab - ivara */}
-          <Link
-            href="/retail"
-            className="flex-1 h-[58px] sm:h-[70px] rounded-l-[50px] rounded-r-[0px] flex items-center justify-center text-[13px] sm:text-[14px] font-semibold bg-[#281000] text-white shadow-sm"
-          >
-            <>
-              <Image
-                src="/retail/Union.png"
-                alt="Iveara"
-                width={80}
-                height={22}
-                className="w-auto h-5 sm:h-6 mr-2 object-contain -mt-1 sm:-mt-2"
-              />
-              <span className="hidden sm:inline">Retail & Customization</span>
-              <span className="sm:hidden">Retail</span>
-              
-              <span className="font-normal ml-1 text-xs sm:text-sm">
-                (For Customer)
-              </span>
-            </>
-          </Link>
+         <Link
+  href="/retail"
+  className="flex-1 h-[52px] sm:h-[70px] rounded-l-[35px] sm:rounded-l-[50px] bg-[#281000] text-white shadow-sm flex flex-col sm:flex-row items-center justify-center px-2"
+>
+<div className="flex items-center justify-center gap-1 min-w-0">
+
+ <Image
+  src="/retail/Union.png"
+  alt="Iveara"
+  width={70}
+  height={20}
+  className="h-4 sm:h-6 w-auto mr-1 sm:mr-2 object-contain flex-shrink-0"
+/>
+
+  <span className="hidden lg:inline text-[14px] relative top-[3px]">
+    Retail & Customization
+  </span>
+
+ <span className="lg:hidden text-[11px] font-semibold whitespace-nowrap relative top-[2px]">
+  Retail
+</span>
+
+</div>
+
+<span className="relative top-[3px] text-[9px] sm:text-xs font-normal mt-0.5 sm:mt-0 sm:ml-2">
+  (For Customer)
+</span>
+</Link>
 
         </div>
       </div>

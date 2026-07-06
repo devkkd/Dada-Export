@@ -78,8 +78,8 @@ const colors = [
 
   return (
     <>
-    <div className="bg-[#FFF7F2] min-h-screen pb-20">
-    <div className="max-w-[1600px] mx-auto px-8 md:px-12 lg:px-20 xl:px-24 pt-12 pb-20">
+    <div className="bg-[#FFF7F2] min-h-screen pb-6 md:pb-20">
+<div className="max-w-[1600px] mx-auto px-8 md:px-12 lg:px-20 xl:px-24 pt-12 pb-6 md:pb-20">
 
         {/* Breadcrumb */}
         
@@ -88,31 +88,68 @@ const colors = [
           
        
          {/* ================= LEFT: IMAGE GALLERY ================= */}
-<div>
-  <div className="grid grid-cols-2 gap-3">
+{/* ================= LEFT: IMAGE GALLERY ================= */}
+
+<div className="space-y-5  lg:top-28 self-start">
+
+  {/* Main Image */}
+
+ <div
+  className="
+    relative
+    w-full
+   h-[260px]
+sm:h-[340px]
+md:h-[420px]
+lg:h-[500px]
+xl:h-[580px]
+2xl:h-[650px]
+    rounded-[24px]
+    overflow-hidden
+    border
+    border-[#E8DED8]
+  "
+>
+
+    <Image
+      src={images[activeImage]}
+      alt="Product"
+      fill
+      className="object-cover transition-all duration-500"
+    />
+
+  </div>
+
+  {/* Thumbnails */}
+
+  <div className="grid grid-cols-4 gap-4">
 
     {images.map((img, idx) => (
-      <div
+
+      <button
         key={idx}
         onClick={() => setActiveImage(idx)}
-        className={`relative aspect-[4/5] overflow-hidden cursor-pointer rounded-md border transition-all ${
+        className={`relative aspect-square rounded-[16px] overflow-hidden border-2 transition-all duration-300 ${
           activeImage === idx
-            ? 'border-[#281000]'
-            : 'border-transparent'
+            ? 'border-[#281000] scale-105'
+            : 'border-[#E6DDD6] hover:border-[#281000]'
         }`}
       >
+
         <Image
           src={img}
-          alt=""
+          alt={`Thumbnail ${idx + 1}`}
           fill
           className="object-cover"
         />
-      </div>
+
+      </button>
+
     ))}
 
   </div>
-</div>
 
+</div>
           {/* ================= RIGHT: PRODUCT DETAILS ================= */}
           <div className="space-y-8">
            <div className=" pb-3">
@@ -193,23 +230,23 @@ const colors = [
 
 
  {/* Surprise Gift Card */}
-<div className="relative overflow-hidden rounded-[20px] bg-[#2B0D00] text-white min-h-[140px] md:min-h-[160px]">
+<div className="relative overflow-hidden rounded-[24px] bg-[#2B0D00] text-white min-h-[180px] md:min-h-[160px]">
 
   {/* Horizontal Ribbon */}
   <div className="absolute top-4 left-0 right-0 h-[8px] bg-gradient-to-r from-[#8A5A00] via-[#F2D27A] to-[#8A5A00]" />
 
   {/* Vertical Ribbon */}
-  <div className="absolute top-0 bottom-0 left-14 w-[8px] bg-gradient-to-b from-[#8A5A00] via-[#F2D27A] to-[#8A5A00]" />
+ <div className="absolute top-0 bottom-0 left-[58px] md:left-14 w-[8px] bg-gradient-to-b from-[#8A5A00] via-[#F2D27A] to-[#8A5A00]" />
 
   {/* Bow */}
-<div className="absolute left-3 sm:left-8 md:left-6 lg:left-6 top-0 sm:top-0 z-20">
+<div className="absolute left-6 md:left-6 top-0 z-20">
     <svg
       width="90"
       height="70"
       viewBox="0 0 90 70"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="w-[55px] md:w-[72px] h-auto"
+   className="w-[72px] md:w-[72px] h-auto"
     >
       <path
         d="M45 35C35 25 8 12 2 18C-4 24 18 38 45 40Z"
@@ -238,17 +275,17 @@ const colors = [
   </div>
 
   {/* Content */}
-  <div className="relative z-10 pl-24 md:pl-28 pr-5 md:pr-6 py-7 md:py-7">
+  <div className="relative z-10 pl-[92px] md:pl-28 pr-4 md:pr-6 py-6 md:py-7">
 
-    <p className="uppercase tracking-[0.15em] text-[10px] md:text-[11px] font-bold text-[#F3D8A6] mb-2">
+    <p className="uppercase tracking-[0.15em] text-[11px] font-bold text-[#F3D8A6] mb-2">
       Something Extra, Just For You
     </p>
 
-    <h3 className="text-[18px] md:text-[22px] font-semibold leading-tight mb-2">
+    <h3 className="text-[20px] md:text-[22px] font-semibold leading-tight mb-2">
       Shop ₹4,000 & Get a Surprise Gift
     </h3>
 
-    <p className="text-[#F7E7C7]/90 text-[12px] md:text-[14px] leading-[1.5] max-w-2xl">
+    <p className="text-[#F7E7C7]/90 text-[13px] md:text-[14px] leading-6 max-w-2xl">
       Every Order Above ₹4,000 Includes A Free Mystery Garment.
       <br />
       A Dress, A Skirt, Or A Top Chosen With Care
@@ -446,20 +483,20 @@ print: selectedPrint,
 
 <div
   id="customization-section"
-  className="mt-10 border-t border-[#D5C9C0] pt-12 scroll-mt-24"
+  className="mt-8 md:mt-10 bg-white rounded-[28px] shadow-[0_10px_40px_rgba(0,0,0,0.06)] border border-[#EFE5DE] p-5 md:p-10 scroll-mt-24"
 >
 
-  <h2 className="text-[24px] md:text-[30px] font-semibold text-[#2A221E]">
+  <h2 className="text-[22px] md:text-[30px] font-semibold leading-tight text-[#281000]">
     Customization - Your Size. Your Fit. Your Style.
   </h2>
 
-  <p className="mt-3 text-[#6F625A] text-sm md:text-base">
+ <p className="mt-2 text-[14px] md:text-base leading-7 text-[#6F625A]">
     Custom-Tailored, Export-Quality - Crafted Just For You
   </p>
 
   {/* FABRIC SELECTION */}
 
-  <div className="mt-10">
+  <div className="mt-8 rounded-2xl bg-[#FFF9F5] border border-[#F2E5DB] p-5">
     <h3 className="font-semibold text-[#2A221E] mb-6">
       Choose Your Fabric - First, Tell Us Your Fabric.
     </h3>
@@ -511,7 +548,7 @@ print: selectedPrint,
   </div>
   {/* COLOR SELECTION */}
 
-<div className="mt-12">
+<div className="mt-6 rounded-2xl bg-[#FFF9F5] border border-[#F2E5DB] p-5">
   <h3 className="font-semibold text-[#2A221E] mb-6">
     Choose Your Colour
   </h3>
@@ -575,12 +612,10 @@ print: selectedPrint,
 
   {/* FORM */}
 
-  <div className="grid grid-cols-1 lg:grid-cols-4 mt-12 border-b border-[#D5C9C0]">
-
+<div className="grid grid-cols-1 lg:grid-cols-4 gap-5 mt-8">
     {/* COLUMN 1 */}
 
-    <div className="px-5 pb-8 lg:border-r lg:border-[#D5C9C0]">
-
+<div className="bg-[#FFFDFC] rounded-2xl border border-[#EFE5DE] p-5 shadow-sm">
       <h3 className="font-semibold text-[16px] text-[#2A221E] mb-6">
         Final Details & Special Requests
       </h3>
@@ -589,27 +624,27 @@ print: selectedPrint,
 
         <input
           placeholder="First and last name"
-          className="w-full h-[46px] rounded-[16px] border border-[#C8BDB2] bg-[#FFFDFC] px-4 placeholder:text-[#AE9D9F]"
+         className="w-full h-[52px] rounded-xl border border-[#E5D8CF] bg-white px-4 focus:border-[#281000] focus:ring-2 focus:ring-[#281000]/10 outline-none transition bg-[#FFFDFC] px-4 placeholder:text-[#AE9D9F]"
         />
 
         <input
           placeholder="+91 your number"
-          className="w-full h-[46px] rounded-[16px] border border-[#C8BDB2] bg-[#FFFDFC] px-4 placeholder:text-[#AE9D9F]"
+          className="w-full h-[52px] rounded-xl border border-[#E5D8CF] bg-white px-4 focus:border-[#281000] focus:ring-2 focus:ring-[#281000]/10 outline-none transition bg-[#FFFDFC] px-4 placeholder:text-[#AE9D9F]"
         />
 
         <input
           placeholder="you@email.com"
-          className="w-full h-[46px] rounded-[16px] border border-[#C8BDB2] bg-[#FFFDFC] px-4 placeholder:text-[#AE9D9F]"
+         className="w-full h-[52px] rounded-xl border border-[#E5D8CF] bg-white px-4 focus:border-[#281000] focus:ring-2 focus:ring-[#281000]/10 outline-none transition bg-[#FFFDFC] px-4 placeholder:text-[#AE9D9F]"
         />
 
         <input
           placeholder="e.g. Pune, Maharashtra"
-          className="w-full h-[46px] rounded-[16px] border border-[#C8BDB2] bg-[#FFFDFC] px-4 placeholder:text-[#AE9D9F]"
+          className="w-full h-[52px] rounded-xl border border-[#E5D8CF] bg-white px-4 focus:border-[#281000] focus:ring-2 focus:ring-[#281000]/10 outline-none transition bg-[#FFFDFC] px-4 placeholder:text-[#AE9D9F]"
         />
 
         <input
           placeholder="6-digit pincode"
-          className="w-full h-[46px] rounded-[16px] border border-[#C8BDB2] bg-[#FFFDFC] px-4 placeholder:text-[#AE9D9F]"
+        className="w-full h-[52px] rounded-xl border border-[#E5D8CF] bg-white px-4 focus:border-[#281000] focus:ring-2 focus:ring-[#281000]/10 outline-none transition bg-[#FFFDFC] px-4 placeholder:text-[#AE9D9F]"
         />
 
       </div>
@@ -644,7 +679,7 @@ print: selectedPrint,
 
               <input
                 placeholder="e.g. 36 inches"
-                className="w-full h-[46px] rounded-[16px] border border-[#C8BDB2] pl-4 pr-20 bg-[#FFFDFC] placeholder:text-[#AE9D9F]"
+               className="w-full h-[52px] rounded-xl border border-[#E5D8CF] bg-white px-4 focus:border-[#281000] focus:ring-2 focus:ring-[#281000]/10 outline-none transition pl-4 pr-20 bg-[#FFFDFC] placeholder:text-[#AE9D9F]"
               />
 
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1">
@@ -711,7 +746,7 @@ print: selectedPrint,
 
               <input
                 placeholder="e.g. 15 inches"
-                className="w-full h-[46px] rounded-[16px] border border-[#C8BDB2] pl-4 pr-20 bg-[#FFFDFC] placeholder:text-[#AE9D9F]"
+                className="w-full h-[52px] rounded-xl border border-[#E5D8CF] bg-white px-4 focus:border-[#281000] focus:ring-2 focus:ring-[#281000]/10 outline-none transition pl-4 pr-20 bg-[#FFFDFC] placeholder:text-[#AE9D9F]"
               />
 
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1">
@@ -909,7 +944,7 @@ print: selectedPrint,
 
 {/* ================= HOW TO MEASURE ================= */}
 
-<div className="mt-8 border-t border-[#D5C9C0] pt-12">
+<div className="mt-8 border-t border-[#D5C9C0] pt-6">
 
   <h2 className="text-[24px] md:text-[30px] font-semibold text-[#0E0E0E] mb-10">
     How to Measure
@@ -1055,9 +1090,9 @@ print: selectedPrint,
 </div> 
       </div>
     </div>
-     <div className="bg-[#FFF7F2] min-h-screen pb-20">
+
       {/* TERA PURA EXISTING CODE */}
-    </div>
+  
 
    
 

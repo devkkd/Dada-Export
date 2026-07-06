@@ -16,6 +16,7 @@ export default function HeaderRetail() {
   const [openMenu, setOpenMenu] = useState(null);
 const [mobileMenuOpen, setMobileMenuOpen] =
   useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   useEffect(() => {
     const logged = localStorage.getItem('accountLogin');
@@ -68,19 +69,18 @@ const [mobileMenuOpen, setMobileMenuOpen] =
   return (
     <header className="bg-[#281000] text-white">
       <div className="max-w-[1920px] mx-auto px-4 md:px-8 lg:px-10">
-        <div className="flex items-center justify-between h-20">
+      <div className="flex items-center justify-between h-[72px] md:h-20">
 
           {/* Logo - ivara */}
           <div className="flex items-center">
             <Link href="/retail" className="flex items-center">
-              <Image
-                src="/retail/Union.png"
-                alt="ivara"
-                width={140}
-                height={50}
-                priority
-                className="h-[42px] md:h-[48px] w-auto object-contain"
-              />
+   <Image
+  src="/retail/Union.png"
+  alt="ivara"
+  width={80}
+  height={80}
+
+/>
             </Link>
           </div>
 
@@ -230,10 +230,10 @@ const [mobileMenuOpen, setMobileMenuOpen] =
           </nav>
 
           {/* Right Side: Search + Icons */}
-          <div className="flex items-center gap-5 md:gap-6">
+          <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
 
             {/* Search Bar */}
-            <div className="flex items-center w-[160px] md:w-[200px] lg:w-[240px] border-b border-white/60 pb-1 transition-all">
+            <div className="hidden lg:flex items-center w-[180px] border-b border-white/70 pb-1">
               <input
                 type="text"
                 placeholder="Search"
@@ -254,6 +254,26 @@ const [mobileMenuOpen, setMobileMenuOpen] =
                 />
               </svg>
             </div>
+                <button
+  onClick={() => setMobileSearchOpen(true)}
+  className="lg:hidden text-white"
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="w-6 h-6"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z"
+    />
+  </svg>
+</button>
+
 
             {/* User Icon */}
             <button
@@ -268,7 +288,7 @@ const [mobileMenuOpen, setMobileMenuOpen] =
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="w-6 h-6"
+               className="w-5 h-5 md:w-6 md:h-6"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -277,7 +297,7 @@ const [mobileMenuOpen, setMobileMenuOpen] =
               </svg>
 
             </button>
-
+        
 
             {/* Cart Icon */}
             <Link
@@ -286,8 +306,8 @@ const [mobileMenuOpen, setMobileMenuOpen] =
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="26"
-                height="26"
+              width="24"
+height="24"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -309,17 +329,50 @@ const [mobileMenuOpen, setMobileMenuOpen] =
   }
   className="lg:hidden text-white"
 >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7"fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
           </div>
         </div>
       </div>
-{mobileMenuOpen && (
-  <div className="lg:hidden bg-[#281000] border-t border-white/20">
+  {mobileSearchOpen && (
+  <div className="fixed top-0 left-0 right-0 z-[99999]">
 
-    <div className="px-6 py-6 flex flex-col">
+    <div className="bg-[#281000] h-[72px] px-4 flex items-center shadow-lg">
+
+      <div className="flex items-center gap-3 w-full">
+
+        <input
+          autoFocus
+          type="text"
+          placeholder="Search Products..."
+          className="flex-1 h-10 rounded-full px-4 bg-white text-black text-sm outline-none"
+        />
+
+        <button
+          onClick={() => setMobileSearchOpen(false)}
+          className="text-white text-3xl leading-none"
+        >
+          ×
+        </button>
+
+      </div>
+
+    </div>
+
+    {/* Background Overlay */}
+    <div
+      className="fixed inset-0 top-[72px] bg-black/40"
+      onClick={() => setMobileSearchOpen(false)}
+    />
+
+  </div>
+)}
+{mobileMenuOpen && (
+  <div className="md:hidden bg-[#281000] border-t border-white/10 shadow-xl">
+
+   <div className="px-4 py-1 flex flex-col max-h-[42vh] overflow-y-auto">
 
       <Link
         href="/retail/new-arrival"
@@ -386,12 +439,12 @@ const [mobileMenuOpen, setMobileMenuOpen] =
       </Link>
 
       <Link
-        href="/retail/contactUs"
-        onClick={() => setMobileMenuOpen(false)}
-        className="py-4"
-      >
-        Support
-      </Link>
+  href="/retail/contactUs"
+  onClick={() => setMobileMenuOpen(false)}
+  className="py-4 border-b border-white/10"
+>
+  Support
+</Link>
 
     </div>
 

@@ -9,7 +9,8 @@ const products = [
         id: 1,
         slug: 'botanical-halter-maxi',
         category: 'Dresses',
-        img: '/retail/newArrivals/2.png',
+        img: '/retail/newArrivals/4.png',
+hoverImg: '/retail/newArrivals/5.png',
         title: 'Botanical Halter Maxi',
         desc: 'Adjustable back strap · Back tie-up · Floor length · Breathable rayon · 100% Premium Rayon · Halter Maxi Dress',
     },
@@ -18,6 +19,7 @@ const products = [
         slug: 'floral-summer-dress',
         category: 'Dresses',
         img: '/retail/newArrivals/1.png',
+hoverImg: '/retail/newArrivals/2.png',
         title: 'Floral Summer Dress',
         desc: 'Soft rayon fabric · Lightweight · Printed design · Comfortable fit',
     },
@@ -25,7 +27,8 @@ const products = [
         id: 3,
         slug: 'casual-printed-top',
         category: 'Tops',
-        img: '/retail/newArrivals/3.png',
+       img: '/retail/newArrivals/3.png',
+hoverImg: '/retail/newArrivals/6.png',
         title: 'Casual Printed Top',
         desc: 'Premium rayon · Breathable fabric · Everyday comfort · Stylish look',
     },
@@ -33,7 +36,8 @@ const products = [
         id: 4,
         slug: 'boho-crop-top',
         category: 'Tops',
-        img: '/retail/newArrivals/6.png',
+       img: '/retail/newArrivals/6.png',
+hoverImg: '/retail/newArrivals/3.png',
         title: 'Boho Crop Top',
         desc: 'Relaxed fit · Soft fabric · Trendy silhouette · Export quality',
     },
@@ -41,7 +45,8 @@ const products = [
         id: 5,
         slug: 'wide-leg-pants',
         category: 'Bottom Wear',
-        img: '/retail/newArrivals/5.png',
+       img: '/retail/newArrivals/5.png',
+hoverImg: '/retail/newArrivals/4.png',
         title: 'Wide Leg Pants',
         desc: 'Comfort fit · Elastic waistband · Premium fabric · Daily wear',
     },
@@ -50,6 +55,7 @@ const products = [
         slug: 'printed-palazzo',
         category: 'Bottom Wear',
         img: '/retail/newArrivals/4.png',
+hoverImg: '/retail/newArrivals/5.png',
         title: 'Printed Palazzo',
         desc: 'Flowy silhouette · Breathable rayon · Elegant and comfortable',
     },
@@ -57,7 +63,8 @@ const products = [
         id: 7,
         slug: 'wide-leg-pants',
         category: 'Bottom Wear',
-        img: '/retail/newArrivals/5.png',
+img: '/retail/newArrivals/5.png',
+hoverImg: '/retail/newArrivals/4.png',
         title: 'Wide Leg Pants',
         desc: 'Comfort fit · Elastic waistband · Premium fabric · Daily wear',
     },
@@ -65,7 +72,8 @@ const products = [
         id: 8,
         slug: 'printed-palazzo',
         category: 'Bottom Wear',
-        img: '/retail/newArrivals/4.png',
+        img: '/retail/newArrivals/3.png',
+hoverImg: '/retail/newArrivals/6.png',
         title: 'Printed Palazzo',
         desc: 'Flowy silhouette · Breathable rayon · Elegant and comfortable',
     },
@@ -74,7 +82,8 @@ const products = [
         id: 9,
         slug: 'botanical-halter-maxi-2',
         category: 'Dresses',
-        img: '/retail/newArrivals/2.png',
+       img: '/retail/newArrivals/1.png',
+hoverImg: '/retail/newArrivals/2.png',
         title: 'Botanical Halter Maxi',
         desc: 'Adjustable back strap · Back tie-up · Floor length · Breathable rayon · 100% Premium Rayon · Halter Maxi Dress',
     },
@@ -82,7 +91,8 @@ const products = [
         id: 10,
         slug: 'floral-summer-dress-2',
         category: 'Dresses',
-        img: '/retail/newArrivals/1.png',
+     img: '/retail/newArrivals/6.png',
+hoverImg: '/retail/newArrivals/3.png',
         title: 'Floral Summer Dress',
         desc: 'Soft rayon fabric · Lightweight · Printed design · Comfortable fit',
     },
@@ -90,7 +100,8 @@ const products = [
         id: 11,
         slug: 'casual-printed-top-2',
         category: 'Tops',
-        img: '/retail/newArrivals/3.png',
+       img: '/retail/newArrivals/6.png',
+hoverImg: '/retail/newArrivals/3.png',
         title: 'Casual Printed Top',
         desc: 'Premium rayon · Breathable fabric · Everyday comfort · Stylish look',
     },
@@ -99,6 +110,7 @@ const products = [
         slug: 'boho-crop-top-2',
         category: 'Tops',
         img: '/retail/newArrivals/6.png',
+hoverImg: '/retail/newArrivals/3.png',
         title: 'Boho Crop Top',
         desc: 'Relaxed fit · Soft fabric · Trendy silhouette · Export quality',
     },
@@ -106,7 +118,8 @@ const products = [
         id: 13,
         slug: 'wide-leg-pants-2',
         category: 'Bottom Wear',
-        img: '/retail/newArrivals/5.png',
+      img: '/retail/newArrivals/3.png',
+hoverImg: '/retail/newArrivals/6.png',
         title: 'Wide Leg Pants',
         desc: 'Comfort fit · Elastic waistband · Premium fabric · Daily wear',
     },
@@ -114,7 +127,8 @@ const products = [
         id: 14,
         slug: 'printed-palazzo-2',
         category: 'Bottom Wear',
-        img: '/retail/newArrivals/4.png',
+      img: '/retail/newArrivals/4.png',
+hoverImg: '/retail/newArrivals/5.png',
         title: 'Printed Palazzo',
         desc: 'Flowy silhouette · Breathable rayon · Elegant and comfortable',
     },
@@ -123,6 +137,7 @@ const products = [
         slug: 'wide-leg-pants-2',
         category: 'Bottom Wear',
         img: '/retail/newArrivals/5.png',
+hoverImg: '/retail/newArrivals/4.png',
         title: 'Wide Leg Pants',
         desc: 'Comfort fit · Elastic waistband · Premium fabric · Daily wear',
     },
@@ -130,13 +145,15 @@ const products = [
         id: 16,
         slug: 'printed-palazzo-2',
         category: 'Bottom Wear',
-        img: '/retail/newArrivals/4.png',
+       img: '/retail/newArrivals/1.png',
+hoverImg: '/retail/newArrivals/2.png',
         title: 'Printed Palazzo',
         desc: 'Flowy silhouette · Breathable rayon · Elegant and comfortable',
     },
    
 ];
 export default function NewArrivalSection() {
+    const [activeImage, setActiveImage] = useState({});
     const [activeCategory, setActiveCategory] = useState('All');
     const [selectedColors, setSelectedColors] = useState({});
     const filteredProducts =
@@ -176,7 +193,7 @@ export default function NewArrivalSection() {
                 </div>
 
                 {/* Products Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-8">
                     {filteredProducts.map((product) => (
                         <Link
                             key={product.id}
@@ -185,32 +202,64 @@ export default function NewArrivalSection() {
                         >
 
                             {/* Product Image */}
-                            <div className="relative h-[380px] overflow-hidden rounded-2xl">
-                                <Image
-                                    src={product.img}
-                                    alt={product.title}
-                                    fill
-                                    className="object-cover group-hover:scale-105 transition-transform duration-700"
-                                />
+              <div
+  className="relative h-[220px] sm:h-[320px] lg:h-[380px] overflow-hidden rounded-2xl"
+  onMouseEnter={() =>
+    setActiveImage((prev) => ({ ...prev, [product.id]: true }))
+  }
+  onMouseLeave={() =>
+    setActiveImage((prev) => ({ ...prev, [product.id]: false }))
+  }
+  onTouchStart={() =>
+    setActiveImage((prev) => ({ ...prev, [product.id]: true }))
+  }
+  onTouchEnd={() =>
+    setActiveImage((prev) => ({ ...prev, [product.id]: false }))
+  }
+>
 
+  {/* Main Image */}
+<Image
+  src={product.img}
+  alt={product.title}
+  fill
+  className={`object-cover transition-all duration-500 ${
+    activeImage[product.id]
+      ? "opacity-0 scale-105"
+      : "opacity-100"
+  }`}
+/>
 
-                            </div>
+  {/* Hover Image */}
+
+ <Image
+  src={product.hoverImg || product.img}
+  alt={product.title}
+  fill
+  className={`object-cover transition-all duration-500 ${
+    activeImage[product.id]
+      ? "opacity-100 scale-105"
+      : "opacity-0"
+  }`}
+/>
+
+</div>
 
                             {/* Content */}
-                            <div className="p-6">
-                                <h3 className="text-xl font-bold text-black mb-3">{product.title}</h3>
+                            <div className="p-3 sm:p-6">
+                               <h3 className="text-[15px] sm:text-xl font-bold text-black mb-2 line-clamp-1">{product.title}</h3>
 
-                                <p className="text-[14px] text-black/70 leading-relaxed line-clamp-3 mb-5">
+                              <p className="text-[11px] sm:text-[14px] text-black/70 leading-5 line-clamp-2 sm:line-clamp-3 mb-3 sm:mb-5">
                                     {product.desc}
                                 </p>
 
                                 {/* Enquire Button */}
-                                <div className="flex items-center justify-between mt-5">
-                                    <button className="px-6 py-2.5 border border-[#281000] text-[#281000] rounded-full text-sm font-medium hover:bg-[#281000] hover:text-white transition-all">
+                               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-5">
+                                   <button className="order-2 sm:order-1 w-full sm:w-auto px-3 sm:px-6 py-2 border border-[#281000] text-[#281000] rounded-full text-[11px] sm:text-sm font-medium hover:bg-[#281000] hover:text-white transition-all">
                                         Enquire →
                                     </button>
 
-                                    <div className="flex items-center gap-3">
+                               <div className="order-1 sm:order-2 flex items-center justify-center sm:justify-end gap-3">
                                         <button
                                             onClick={() =>
                                                 setSelectedColors({
