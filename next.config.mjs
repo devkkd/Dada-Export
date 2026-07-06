@@ -9,6 +9,20 @@ const nextConfig = {
     root: __dirname,
   },
   reactCompiler: true,
+  images: {
+    remotePatterns: [
+      {
+        // Cloudflare R2 public bucket URL (r2.dev subdomain)
+        protocol: 'https',
+        hostname: '*.r2.dev',
+      },
+      {
+        // Cloudflare custom domain (if configured)
+        protocol: 'https',
+        hostname: '*.cloudflarestorage.com',
+      },
+    ],
+  },
 };
 
 export default nextConfig;
