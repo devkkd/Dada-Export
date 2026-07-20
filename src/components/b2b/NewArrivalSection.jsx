@@ -8,74 +8,27 @@ import 'swiper/css';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-const products = [
-  {
-    id: 1,
-    category: 'Dresses',
-    img: '/b2b/home/7.png',
-    title: 'Botanical Halter Maxi',
-    desc: 'Adjustable back strap · Back tie-up · Floor length · Breathable rayon · 100% Premium Rayon · Halter Maxi Dress',
-  },
-  {
-    id: 2,
-    category: 'Dresses',
-    img: '/b2b/home/8.png',
-    title: 'Floral Summer Dress',
-    desc: 'Soft rayon fabric · Lightweight · Printed design · Comfortable fit',
-  },
-  {
-    id: 3,
-    category: 'Tops',
-    img: '/b2b/home/9.png',
-    title: 'Casual Printed Top',
-    desc: 'Premium rayon · Breathable fabric · Everyday comfort · Stylish look',
-  },
-  {
-    id: 4,
-    category: 'Tops',
-    img: '/b2b/home/10.png',
-    title: 'Boho Crop Top',
-    desc: 'Relaxed fit · Soft fabric · Trendy silhouette · Export quality',
-  },
-  {
-    id: 5,
-    category: 'Bottom Wear',
-    img: '/b2b/home/11.png',
-    title: 'Wide Leg Pants',
-    desc: 'Comfort fit · Elastic waistband · Premium fabric · Daily wear',
-  },
-  {
-    id: 6,
-    category: 'Bottom Wear',
-    img: '/b2b/home/12.png',
-    title: 'Printed Palazzo',
-    desc: 'Flowy silhouette · Breathable rayon · Elegant and comfortable',
-  },
-  {
-    id: 7,
-    category: 'Accessories',
-    img: '/b2b/home/13.png',
-    title: 'Handcrafted Tote Bag',
-    desc: 'Spacious design · Durable fabric · Stylish everyday accessory',
-  },
-  {
-    id: 8,
-    category: 'Home & Lifestyle',
-    img: '/b2b/home/14.png',
-    title: 'Premium Yoga Mat',
-    desc: 'Eco-friendly material · Comfortable grip · Lightweight and durable',
-  },
-];
+import { useB2BData } from '@/components/b2b/B2BDataContext';
 
 export default function NewArrivalSection() {
+  const { newArrivals, categories } = useB2BData();
   const [activeCategory, setActiveCategory] = useState('All');
-const [selectedColors, setSelectedColors] = useState({});
-const filteredProducts =
-  activeCategory === 'All'
-    ? products
-    : products.filter(
-        (product) => product.category === activeCategory
-      );
+  const [selectedColors, setSelectedColors] = useState({});
+
+  // Build category tabs dynamically from DB top-level categories
+  const categoryTabs = ['All', ...categories.filter((c) => !c.parentId).map((c) => c.name)];
+
+  const filteredProducts =
+    activeCategory === 'All'
+      ? newArrivals
+      : newArrivals.filter((product) => {
+          const cat = categories.find((c) => String(c._id) === String(product.category));
+          return cat?.name === activeCategory;
+        });
+
+  // Don't render section if no products in DB yet
+  if (newArrivals.length === 0) return null;
+
   return (
     <section className="w-full bg-[#FFFEF9] py-10 sm:py-16 md:py-20">
      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 md:px-12 lg:px-20 xl:px-24">
@@ -98,7 +51,7 @@ const filteredProducts =
 
           {/* Category Tabs */}
           <div className="flex flex-wrap gap-2">
-           {['All', 'Dresses', 'Tops', 'Bottom Wear', 'Accessories', 'Home & Lifestyle'].map((cat) => (
+           {categoryTabs.map((cat) => (
   <button
     key={cat}
     onClick={() => setActiveCategory(cat)}
@@ -119,7 +72,7 @@ const filteredProducts =
   modules={[Autoplay]}
   slidesPerView={2}
 spaceBetween={12}
-  loop={true}
+  loop={filteredProducts.length > 2}
   autoplay={{
     delay: 2500,
     disableOnInteraction: false,
@@ -147,18 +100,19 @@ spaceBetween={12}
 
   {filteredProducts.map((product) => (
 
-    <SwiperSlide key={product.id}>
+    <SwiperSlide key={product._id}>
 
-      <div className="group bg-[#FFFEF9] hover:shadow-xl transition-all duration-300">
+      <Link href={`/b2b/product/${product.slug}`} className="group block bg-[#FFFEF9] hover:shadow-xl transition-all duration-300">
 
         {/* Product Image */}
 
        <div className="relative h-[220px] sm:h-[320px] lg:h-[380px] overflow-hidden rounded-2xl">
 
           <Image
-            src={product.img}
-            alt={product.title}
+            src={product.images?.[0] || '/b2b/home/7.png'}
+            alt={product.name}
             fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="object-cover group-hover:scale-105 transition-transform duration-700"
           />
 
@@ -169,82 +123,49 @@ spaceBetween={12}
         <div className="p-3 sm:p-6">
 
           <h3 className="text-[15px] sm:text-xl font-bold text-black mb-2 line-clamp-1">
-            {product.title}
+            {product.name}
           </h3>
 
          <p className="text-[11px] sm:text-[14px] text-black/70 leading-5 line-clamp-2 sm:line-clamp-3 mb-3 sm:mb-5">
-            {product.desc}
+            {product.description}
           </p>
 
          <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3 mt-5">
 
-  <button className="w-full sm:w-auto px-3 sm:px-6 py-2 border border-[#95565E] text-[#95565E] rounded-full text-[11px] sm:text-sm font-medium hover:bg-[#95565E] hover:text-white transition-all">
+  <button
+    onClick={(e) => e.preventDefault()}
+    className="w-full sm:w-auto px-3 sm:px-6 py-2 border border-[#95565E] text-[#95565E] rounded-full text-[11px] sm:text-sm font-medium hover:bg-[#95565E] hover:text-white transition-all"
+  >
     Enquire →
   </button>
 
-  <div className="flex items-center justify-center sm:justify-end gap-3">
-    <button
-      onClick={() =>
-        setSelectedColors({
-          ...selectedColors,
-          [product.id]: 'teal',
-        })
-      }
-      className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-teal-600 ${
-        selectedColors[product.id] === 'teal'
-          ? 'ring-2 ring-teal-600 ring-offset-2 scale-125'
-          : ''
-      }`}
-    />
-
-    <button
-      onClick={() =>
-        setSelectedColors({
-          ...selectedColors,
-          [product.id]: 'blue',
-        })
-      }
-      className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-blue-600 ${
-        selectedColors[product.id] === 'blue'
-          ? 'ring-2 ring-blue-600 ring-offset-2 scale-125'
-          : ''
-      }`}
-    />
-
-    <button
-      onClick={() =>
-        setSelectedColors({
-          ...selectedColors,
-          [product.id]: 'rose',
-        })
-      }
-      className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-rose-600 ${
-        selectedColors[product.id] === 'rose'
-          ? 'ring-2 ring-rose-600 ring-offset-2 scale-125'
-          : ''
-      }`}
-    />
-
-    <button
-      onClick={() =>
-        setSelectedColors({
-          ...selectedColors,
-          [product.id]: 'black',
-        })
-      }
-      className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-slate-800 ${
-        selectedColors[product.id] === 'black'
-          ? 'ring-2 ring-slate-800 ring-offset-2 scale-125'
-          : ''
-      }`}
-    />
-  </div>
+  {/* Color swatches from DB */}
+  {product.colors?.length > 0 && (
+    <div className="flex items-center justify-center sm:justify-end gap-3">
+      {product.colors.slice(0, 4).map((color, i) => (
+        <button
+          key={i}
+          onClick={(e) => {
+            e.preventDefault();
+            setSelectedColors({ ...selectedColors, [product._id]: color.name });
+          }}
+          title={color.name}
+          className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full transition-transform ${
+            selectedColors[product._id] === color.name
+              ? 'ring-2 ring-offset-2 scale-125'
+              : ''
+          }`}
+          style={{ backgroundColor: color.hex || '#ccc' }}
+        />
+      ))}
+    </div>
+  )}
 
 </div>
 
         </div>
 
-      </div>
+      </Link>
 
     </SwiperSlide>
 

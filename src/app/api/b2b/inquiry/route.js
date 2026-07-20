@@ -2,12 +2,18 @@ import { NextResponse } from 'next/server';
 import { submitInquiry, getAllInquiries } from '@/controllers/b2b/inquiryController';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { sendInquiryNotification } from '@/lib/mailer';
 
 // POST /api/b2b/inquiry  — public (anyone can submit)
 export async function POST(request) {
   try {
     const body    = await request.json();
     const inquiry = await submitInquiry(body);
+
+    // Send email notification — non-blocking, don't fail the request if email fails
+    sendInquiryNotification(inquiry.toObject ? inquiry.toObject() : inquiry)
+      .catch((err) => console.error('[mailer] inquiry notification failed:', err.message));
+
     return NextResponse.json({ success: true, data: inquiry }, { status: 201 });
   } catch (err) {
     return NextResponse.json({ success: false, error: err.message }, { status: 400 });

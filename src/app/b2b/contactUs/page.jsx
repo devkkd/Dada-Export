@@ -1,9 +1,56 @@
 'use client';
 
 import Image from 'next/image';
-import React from 'react';
+import React, { useState } from 'react';
 
 const ContactPage = () => {
+  const [formData, setFormData] = useState({
+    name:         '',
+    businessType: '',
+    designation:  '',
+    city:         '',
+    email:        '',
+    phone:        '',
+    message:      '',
+  });
+  const [status, setStatus] = useState(null); // 'submitting' | 'success' | 'error'
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus('submitting');
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/customer-inquiry', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ ...formData, source: 'b2b' }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Failed to submit message');
+
+      setStatus('success');
+      setFormData({
+        name:         '',
+        businessType: '',
+        designation:  '',
+        city:         '',
+        email:        '',
+        phone:        '',
+        message:      '',
+      });
+    } catch (err) {
+      console.error(err);
+      setStatus('error');
+      setErrorMsg(err.message);
+    }
+  };
+
   return (
    <section className="w-full bg-[#FFFEF9]">
   <div className="max-w-[1600px] mx-auto px-8 md:px-12 lg:px-20 xl:px-24 pt-12 pb-20"> 
@@ -67,14 +114,18 @@ const ContactPage = () => {
               </h2>
               <p className="text-[#0E0E0E] mb-8">Every Conversation Starts Here</p>
 
-              <form className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm text-[#0E0E0E] mb-2">Full Name</label>
                     <input
                       type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
                       placeholder="Your full name"
-                     className="w-full px-5 py-3.5 rounded-2xl border border-gray-200 focus:border-[#95565E] outline-none bg-white placeholder:text-[#95565E]/40"
+                      className="w-full px-5 py-3.5 rounded-2xl border border-gray-200 focus:border-[#95565E] outline-none bg-white placeholder:text-[#95565E]/40"
                     />
                   </div>
                <div>
@@ -87,17 +138,19 @@ const ContactPage = () => {
 
   <div className="relative">
     <select
-      defaultValue=""
+      name="businessType"
+      value={formData.businessType}
+      onChange={handleChange}
       className="w-full h-[64px] px-6 pr-14 rounded-[24px] border border-[#BFAFB2] bg-white text-[#0E0E0E] text-[16px] outline-none appearance-none focus:border-[#95565E]"
       style={{ fontFamily: 'Mona Sans, sans-serif' }}
     >
-      <option value="" disabled>
+      <option value="">
         Select Business Type
       </option>
-      <option>Wholesale Buyer</option>
-      <option>Retailer</option>
-      <option>Boutique</option>
-      <option>Exporter</option>
+      <option value="Wholesale Buyer">Wholesale Buyer</option>
+      <option value="Retailer">Retailer</option>
+      <option value="Boutique">Boutique</option>
+      <option value="Exporter">Exporter</option>
     </select>
 
     {/* Custom Arrow */}
@@ -124,6 +177,9 @@ const ContactPage = () => {
                     <label className="block text-sm text-[#0E0E0E] mb-2">Designation / Role</label>
                     <input
                       type="text"
+                      name="designation"
+                      value={formData.designation}
+                      onChange={handleChange}
                       placeholder="e.g. Owner, Buyer, Manager"
                       className="w-full px-5 py-3.5 rounded-2xl border border-gray-200 focus:border-[#95565E] outline-none bg-white placeholder:text-[#95565E]/40"
                     />
@@ -132,6 +188,9 @@ const ContactPage = () => {
                     <label className="block text-sm text-[#0E0E0E] mb-2">City / State</label>
                     <input
                       type="text"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleChange}
                       placeholder="e.g. Mumbai, Maharashtra"
                        className="w-full px-5 py-3.5 rounded-2xl border border-gray-200 focus:border-[#95565E] outline-none bg-white placeholder:text-[#95565E]/40"
                     />
@@ -142,6 +201,10 @@ const ContactPage = () => {
                   <label className="block text-sm text-[#0E0E0E] mb-2">Email Address</label>
                   <input
                     type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
                     placeholder="Enter your email address"
                      className="w-full px-5 py-3.5 rounded-2xl border border-gray-200 focus:border-[#95565E] outline-none bg-white placeholder:text-[#95565E]/40"
                   />
@@ -152,6 +215,10 @@ const ContactPage = () => {
                     <label className="block text-sm text-[#0E0E0E] mb-2">WhatsApp / Phone</label>
                     <input
                       type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      required
                       placeholder="+91 or your country code"
                      className="w-full px-5 py-3.5 rounded-2xl border border-gray-200 focus:border-[#95565E] outline-none bg-white placeholder:text-[#95565E]/40"
                     />
@@ -160,19 +227,35 @@ const ContactPage = () => {
                     <label className="block text-sm text-[#0E0E0E] mb-2 ">Your Message</label>
                     <textarea
                       rows={4}
+                      name="message"
+                      value={formData.message}
+                      onChange={handleChange}
+                      required
                       placeholder="Write your message here – the more detail you share, the better we can help."
                       className="w-full px-5 py-3.5 rounded-2xl border border-gray-200 focus:border-[#95565E] outline-none bg-white resize-y  placeholder:text-[#95565E]/40"
                     />
                   </div>
                 </div>
 
+                {status === 'success' && (
+                  <div className="p-4 bg-green-50 border border-green-200 text-green-700 text-sm font-semibold rounded-2xl">
+                    Thank you! Your message has been sent successfully. We will get back to you shortly.
+                  </div>
+                )}
+                {status === 'error' && (
+                  <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-sm font-semibold rounded-2xl">
+                    Error: {errorMsg || 'Something went wrong. Please try again.'}
+                  </div>
+                )}
+
              <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-8 pt-4">
   
   <button
     type="submit"
-    className="bg-[#95565E] hover:bg-[#7d3f44] text-white h-[52px] px-8 md:px-10 rounded-full font-medium text-sm flex items-center justify-center transition-all duration-300 shrink-0"
+    disabled={status === 'submitting'}
+    className="bg-[#95565E] hover:bg-[#7d3f44] text-white h-[52px] px-8 md:px-10 rounded-full font-medium text-sm flex items-center justify-center transition-all duration-300 shrink-0 disabled:opacity-50"
   >
-    Send Message →
+    {status === 'submitting' ? 'Sending...' : 'Send Message →'}
   </button>
 
   <p

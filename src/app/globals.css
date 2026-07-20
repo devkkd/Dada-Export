@@ -40,10 +40,70 @@ body {
   overflow-x: hidden;
 }
 
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 img,
 video,
 canvas,
 svg {
   max-width: 100%;
   height: auto;
+}
+
+/* ── Marquee animation (used by Review & similar components) ── */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 40s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* ── B2B hero marquee strip ── */
+@keyframes marquee-full {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-100%); }
+}
+
+.marquee-container {
+  display: flex;
+  animation: marquee-full 40s linear infinite;
+  will-change: transform;
+}
+
+.marquee-container:hover { animation-play-state: paused; }
+
+.marquee-item {
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 0 2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 2rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #3f2a1e;
+  letter-spacing: 0.05em;
+}
+
+.marquee-item::after { content: "•"; margin-left: 2rem; }
+.marquee-item:nth-child(7)::after,
+.marquee-item:nth-child(14)::after { display: none; }
+
+@media (max-width: 640px) {
+  .marquee-item { padding: 0 1.5rem; font-size: 0.75rem; gap: 1.5rem; }
+  .marquee-item::after { margin-left: 1.5rem; }
 }

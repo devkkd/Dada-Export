@@ -14,7 +14,8 @@ export async function GET(request, { params }) {
     if (!await adminGuard()) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
-    const inquiry = await getInquiryById(params.id);
+    const { id } = await params;
+    const inquiry = await getInquiryById(id);
     return NextResponse.json({ success: true, data: inquiry });
   } catch (err) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
@@ -27,8 +28,9 @@ export async function PATCH(request, { params }) {
     if (!await adminGuard()) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
+    const { id }  = await params;
     const body    = await request.json();
-    const inquiry = await updateInquiryStatus(params.id, body);
+    const inquiry = await updateInquiryStatus(id, body);
     return NextResponse.json({ success: true, data: inquiry });
   } catch (err) {
     return NextResponse.json({ success: false, error: err.message }, { status: 400 });

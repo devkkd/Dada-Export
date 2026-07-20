@@ -15,10 +15,11 @@ export default function CategoriesPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading]       = useState(true);
   const [tab, setTab]               = useState('all'); // 'all' | 'b2b' | 'retail'
-  const [showModal, setShowModal]   = useState(false);
-  const [editing, setEditing]       = useState(null); // category object or null
-  const [deleteId, setDeleteId]     = useState(null);
-  const [deleting, setDeleting]     = useState(false);
+  const [showModal, setShowModal]       = useState(false);
+  const [editing, setEditing]           = useState(null);   // category object or null
+  const [defaultParent, setDefaultParent] = useState(null); // pre-fill parent when adding subcategory
+  const [deleteId, setDeleteId]         = useState(null);
+  const [deleting, setDeleting]         = useState(false);
 
   const fetchCategories = async () => {
     setLoading(true);
@@ -74,7 +75,7 @@ export default function CategoriesPage() {
           <p className="text-sm text-gray-500 mt-0.5">Manage B2B and Retail product categories</p>
         </div>
         <button
-          onClick={() => { setEditing(null); setShowModal(true); }}
+          onClick={() => { setEditing(null); setDefaultParent(null); setShowModal(true); }}
           className="flex items-center gap-2 bg-[#95565E] hover:bg-[#7f4750] text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors shadow-sm"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -107,7 +108,7 @@ export default function CategoriesPage() {
           <div className="p-12 text-center">
             <p className="text-gray-500 text-sm">No categories yet.</p>
             <button
-              onClick={() => { setEditing(null); setShowModal(true); }}
+              onClick={() => { setEditing(null); setDefaultParent(null); setShowModal(true); }}
               className="mt-4 text-[#95565E] text-sm font-medium hover:underline"
             >
               Create your first category →
@@ -173,8 +174,24 @@ export default function CategoriesPage() {
                   </td>
                   <td className="px-4 py-3.5">
                     <div className="flex items-center gap-2 justify-end">
+                      {/* Add Subcategory — only on top-level rows */}
+                      {cat.isParent && (
+                        <button
+                          onClick={() => {
+                            setEditing(null);
+                            setDefaultParent(cat);
+                            setShowModal(true);
+                          }}
+                          className="text-gray-400 hover:text-violet-600 transition-colors p-1.5 rounded-lg hover:bg-violet-50"
+                          title="Add Subcategory"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                          </svg>
+                        </button>
+                      )}
                       <button
-                        onClick={() => { setEditing(cat); setShowModal(true); }}
+                        onClick={() => { setEditing(cat); setDefaultParent(null); setShowModal(true); }}
                         className="text-gray-400 hover:text-[#95565E] transition-colors p-1.5 rounded-lg hover:bg-rose-50"
                         title="Edit"
                       >
@@ -204,6 +221,7 @@ export default function CategoriesPage() {
       {showModal && (
         <CategoryModal
           editing={editing}
+          defaultParent={defaultParent}
           allCategories={categories}
           onClose={() => setShowModal(false)}
           onSaved={() => { setShowModal(false); fetchCategories(); }}
@@ -242,14 +260,16 @@ export default function CategoriesPage() {
 
 /* ─── Category Form Modal ─────────────────────────────────────── */
 
-function CategoryModal({ editing, allCategories, onClose, onSaved }) {
+function CategoryModal({ editing, defaultParent, allCategories, onClose, onSaved }) {
   const isEdit = !!editing;
+  // defaultParent = pre-fill parent when clicking "Add Subcategory" on a row
+  const preParent = defaultParent?._id || '';
 
   const [form, setForm] = useState({
     name:     editing?.name     || '',
     slug:     editing?.slug     || '',
-    site:     editing?.site     || 'both',
-    parentId: editing?.parentId?._id || editing?.parentId || '',
+    site:     editing?.site     || defaultParent?.site || 'both',
+    parentId: editing?.parentId?._id || editing?.parentId || preParent,
     order:    editing?.order    ?? 0,
     isActive: editing?.isActive ?? true,
   });
@@ -334,7 +354,11 @@ function CategoryModal({ editing, allCategories, onClose, onSaved }) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h3 className="text-base font-semibold text-[#1a1a1a]">
-            {isEdit ? 'Edit Category' : 'New Category'}
+            {isEdit
+              ? `Edit: ${editing.name}`
+              : defaultParent
+              ? `Add Subcategory → ${defaultParent.name}`
+              : 'New Category'}
           </h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -471,7 +495,7 @@ function CategoryModal({ editing, allCategories, onClose, onSaved }) {
               disabled={saving || uploading}
               className="flex-1 px-4 py-2.5 rounded-xl bg-[#95565E] hover:bg-[#7f4750] text-white text-sm font-semibold transition-colors disabled:opacity-60"
             >
-              {uploading ? 'Uploading…' : saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Category'}
+              {uploading ? 'Uploading…' : saving ? 'Saving…' : isEdit ? 'Save Changes' : defaultParent ? 'Create Subcategory' : 'Create Category'}
             </button>
           </div>
         </form>

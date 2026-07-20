@@ -21,6 +21,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: '*.cloudflarestorage.com',
       },
+      {
+        // Google profile photos (OAuth)
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
     ],
   },
 };

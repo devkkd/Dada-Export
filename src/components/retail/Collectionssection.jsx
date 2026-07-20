@@ -2,12 +2,20 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRetailData } from '@/components/retail/RetailDataContext';
+
+const FALLBACK_IMAGES = ['/retail/home/4.png', '/retail/home/5.png', '/retail/home/6.png'];
 
 export default function CollectionsSection() {
+  const { categories } = useRetailData();
+
+  // Top-level categories only, max 6
+  const topLevel = categories.filter((c) => !c.parentId).slice(0, 6);
+
   return (
     <section className="w-full bg-[#FFF7F2] pt-16 sm:pt-20 md:pt-24 pb-4 sm:pb-6 md:pb-8">
       <div className="max-w-7xl mx-auto px-6">
-        
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mb-12 sm:mb-16">
           <div className="flex items-center gap-4">
@@ -16,75 +24,54 @@ export default function CollectionsSection() {
               BROWSE BY CATEGORY
             </span>
           </div>
-
-          <h2 className="text-3xl sm:text-4xl font-bold text-center text-black">
-            Shop Our Collections
-          </h2>
-
-          <Link
-  href="#"
-  style={{ color: '#281000' }}
-  className="text-xs sm:text-sm font-medium tracking-widest uppercase flex items-center gap-1"
->
-  SEE ALL COLLECTIONS →
-</Link>
+          <h2 className="text-3xl sm:text-4xl font-bold text-center text-black">Shop Our Collections</h2>
+          <Link href="/retail/new-arrival" style={{ color: '#281000' }}
+            className="text-xs sm:text-sm font-medium tracking-widest uppercase flex items-center gap-1">
+            SEE ALL COLLECTIONS →
+          </Link>
         </div>
 
         {/* Collections Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          
-          {/* Dresses */}
-          <Link href="/dresses" className="group">
-          <div className="relative overflow-hidden rounded-3xl h-[240px] sm:h-[300px] md:h-[420px] lg:h-[460px] xl:h-[500px] mb-5">
-              <Image
-                src="/retail/home/4.png"
-                alt="Dresses"
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-700"
-              />
-            </div>
-            <div className="text-center">
-              <h3 className="text-2xl font-bold mb-2 text-black">
-  Dresses
-</h3>
-              <p className="text-sm text-black/70">Maxi Dress | Midi Dress | Short Dress</p>
-            </div>
-          </Link>
-
-          {/* Tops */}
-          <Link href="/tops" className="group">
-            <div className="relative overflow-hidden rounded-3xl h-[240px] sm:h-[300px] md:h-[420px] lg:h-[460px] xl:h-[500px] mb-5">
-              <Image
-                src="/retail/home/5.png"
-                alt="Tops"
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-700"
-              />
-            </div>
-            <div className="text-center">
-             <h3 className="text-2xl font-bold mb-2 text-black">
-  Tops</h3>
-              <p className="text-sm text-black/70">Crop Tops | Shirts | T-Shirts</p>
-            </div>
-          </Link>
-
-          {/* Bottom Wear */}
-          <Link href="/bottom-wear" className="group">
-          <div className="relative overflow-hidden rounded-3xl h-[240px] sm:h-[300px] md:h-[420px] lg:h-[460px] xl:h-[500px] mb-5">
-              <Image
-                src="/retail/home/6.png"
-                alt="Bottom Wear"
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-700"
-              />
-            </div>
-            <div className="text-center">
-            <h3 className="text-2xl font-bold mb-2 text-black">
-  Bottom Wear</h3>
-              <p className="text-sm text-black/70">Pants | Skirts | Shorts</p>
-            </div>
-          </Link>
-        </div>
+        {topLevel.length === 0 ? (
+          // Fallback static while DB is empty
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { name: 'Dresses',     img: '/retail/home/4.png', sub: 'Maxi Dress | Midi Dress | Short Dress', slug: 'dresses'     },
+              { name: 'Tops',        img: '/retail/home/5.png', sub: 'Crop Tops | Shirts | T-Shirts',         slug: 'tops'        },
+              { name: 'Bottom Wear', img: '/retail/home/6.png', sub: 'Pants | Skirts | Shorts',               slug: 'bottom-wear' },
+            ].map((item) => (
+              <Link key={item.slug} href={`/retail/category/${item.slug}`} className="group">
+                <div className="relative overflow-hidden rounded-3xl h-[240px] sm:h-[300px] md:h-[420px] lg:h-[460px] xl:h-[500px] mb-5">
+                  <Image src={item.img} alt={item.name} fill sizes="(max-width: 768px) 100vw, 33vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-700" />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-2xl font-bold mb-2 text-black">{item.name}</h3>
+                  <p className="text-sm text-black/70">{item.sub}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className={`grid gap-8 ${topLevel.length >= 3 ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 md:grid-cols-2'}`}>
+            {topLevel.map((cat, idx) => {
+              const subNames = (cat.subcategories || []).map((s) => s.name).join(' | ');
+              const imgSrc   = cat.image || FALLBACK_IMAGES[idx % FALLBACK_IMAGES.length];
+              return (
+                <Link key={cat._id} href={`/retail/category/${cat.slug}`} className="group">
+                  <div className="relative overflow-hidden rounded-3xl h-[240px] sm:h-[300px] md:h-[420px] lg:h-[460px] xl:h-[500px] mb-5">
+                    <Image src={imgSrc} alt={cat.name} fill sizes="(max-width: 768px) 100vw, 33vw"
+                      className="object-cover group-hover:scale-105 transition-transform duration-700" />
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold mb-2 text-black">{cat.name}</h3>
+                    {subNames && <p className="text-sm text-black/70">{subNames}</p>}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );

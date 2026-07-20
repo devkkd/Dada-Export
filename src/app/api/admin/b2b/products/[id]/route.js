@@ -17,10 +17,7 @@ export async function GET(request, { params }) {
   try {
     const { id } = await params;
     await connectDB();
-    const product = await B2BProduct.findById(id)
-      .populate('category', 'name slug')
-      .populate('subcategory', 'name slug')
-      .lean();
+    const product = await B2BProduct.findById(id).lean();
 
     if (!product) {
       return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });

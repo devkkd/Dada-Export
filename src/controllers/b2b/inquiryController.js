@@ -27,7 +27,7 @@ export async function getInquiryById(id) {
 export async function updateInquiryStatus(id, { status, adminNote }) {
   await connectDB();
   const update = {};
-  if (status)    update.status    = status;
-  if (adminNote) update.adminNote = adminNote;
-  return Inquiry.findByIdAndUpdate(id, update, { new: true });
+  if (status    !== undefined) update.status    = status;
+  if (adminNote !== undefined) update.adminNote = adminNote;
+  return Inquiry.findByIdAndUpdate(id, update, { new: true }).lean();
 }

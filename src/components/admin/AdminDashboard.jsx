@@ -1,16 +1,42 @@
 'use client';
 
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import AdminShell from '@/components/admin/AdminShell';
 
-const STATS = [
-  { label: 'B2B Products',    color: 'text-rose-700',   ring: 'ring-rose-200'   },
-  { label: 'New Inquiries',   color: 'text-amber-700',  ring: 'ring-amber-200'  },
-  { label: 'Retail Products', color: 'text-blue-700',   ring: 'ring-blue-200'   },
-  { label: 'Retail Orders',   color: 'text-green-700',  ring: 'ring-green-200'  },
+const STATS_CONFIG = [
+  { key: 'b2bProducts',    label: 'B2B Products',    color: 'text-rose-700',   ring: 'ring-rose-200'   },
+  { key: 'newInquiries',   label: 'New Inquiries',   color: 'text-amber-700',  ring: 'ring-amber-200'  },
+  { key: 'retailProducts', label: 'Retail Products', color: 'text-blue-700',   ring: 'ring-blue-200'   },
+  { key: 'retailOrders',   label: 'Retail Orders',   color: 'text-green-700',  ring: 'ring-green-200'  },
 ];
 
 export default function AdminDashboard() {
+  const [stats, setStats] = useState({
+    b2bProducts: null,
+    newInquiries: null,
+    retailProducts: null,
+    retailOrders: null,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch('/api/admin/dashboard-stats');
+        const json = await res.json();
+        if (json.success) {
+          setStats(json.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch dashboard stats:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
   return (
     <AdminShell title="Dashboard">
 
@@ -22,10 +48,12 @@ export default function AdminDashboard() {
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-8 sm:mb-10">
-        {STATS.map((stat) => (
+        {STATS_CONFIG.map((stat) => (
           <div key={stat.label} className={`bg-white rounded-2xl p-4 sm:p-6 ring-1 ${stat.ring} shadow-sm`}>
             <p className="text-xs sm:text-sm text-gray-500 font-medium">{stat.label}</p>
-            <p className={`text-2xl sm:text-3xl font-bold mt-2 ${stat.color}`}>—</p>
+            <p className={`text-2xl sm:text-3xl font-bold mt-2 ${stat.color}`}>
+              {loading ? '...' : (stats[stat.key] !== null ? stats[stat.key] : '—')}
+            </p>
           </div>
         ))}
       </div>

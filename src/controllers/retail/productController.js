@@ -1,22 +1,38 @@
 import { connectDB } from '@/lib/db';
 import RetailProduct from '@/models/retail/RetailProduct';
+import '@/models/Category';
 
-export async function getRetailProducts({ category, featured } = {}) {
-  await connectDB();
+async function fetchProducts(query, { bySlug = false } = {}) {
+  try {
+    await connectDB();
+  } catch (err) {
+    console.error('Retail products DB connection failed:', err.message);
+    return bySlug ? null : [];
+  }
+  try {
+    if (bySlug) return await RetailProduct.findOne(query).lean();
+    return await RetailProduct.find(query).sort({ createdAt: -1 }).lean();
+  } catch (err) {
+    console.error('Retail products query failed:', err.message);
+    return bySlug ? null : [];
+  }
+}
+
+export async function getRetailProducts({ category, subcategory, featured, newArrival } = {}) {
   const query = { isActive: true };
-  if (category && category !== 'All') query.category = category;
-  if (featured) query.isFeatured = true;
-  return RetailProduct.find(query).sort({ createdAt: -1 }).lean();
+  if (category)    query.category     = category;
+  if (subcategory) query.subcategory  = subcategory;
+  if (featured)    query.isFeatured   = true;
+  if (newArrival)  query.isNewArrival = true;
+  return fetchProducts(query);
 }
 
 export async function getRetailProductBySlug(slug) {
-  await connectDB();
-  return RetailProduct.findOne({ slug, isActive: true }).lean();
+  return fetchProducts({ slug, isActive: true }, { bySlug: true });
 }
 
 export async function getAllRetailProducts() {
-  await connectDB();
-  return RetailProduct.find({}).sort({ createdAt: -1 }).lean();
+  return fetchProducts({});
 }
 
 export async function createRetailProduct(data) {

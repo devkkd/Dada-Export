@@ -4,6 +4,12 @@ import { clearCart } from './cartController';
 
 export async function placeOrder(userId, { items, totalAmount, shippingAddress, paymentId }) {
   await connectDB();
+  if (!Array.isArray(items) || items.length === 0) {
+    throw new Error('No items in order');
+  }
+  if (!shippingAddress || !shippingAddress.street || !shippingAddress.city || !shippingAddress.pincode) {
+    throw new Error('Incomplete shipping address');
+  }
 
   const order = await Order.create({
     userId,

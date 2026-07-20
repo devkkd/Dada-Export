@@ -3,35 +3,42 @@ import B2BProduct from '@/models/b2b/B2BProduct';
 // Must import Category so Mongoose registers the schema before populate() runs
 import '@/models/Category';
 
+async function fetchProducts(query, { bySlug = false } = {}) {
+  try {
+    await connectDB();
+  } catch (error) {
+    console.error('B2B products DB connection failed:', error.message);
+    return bySlug ? null : [];
+  }
+
+  try {
+    if (bySlug) {
+      return await B2BProduct.findOne(query).lean();
+    }
+
+    return await B2BProduct.find(query).sort({ createdAt: -1 }).lean();
+  } catch (error) {
+    console.error('B2B products query failed:', error.message);
+    return bySlug ? null : [];
+  }
+}
+
 export async function getB2BProducts({ category, subcategory, featured, newArrival } = {}) {
-  await connectDB();
   const query = { isActive: true };
   if (category)    query.category     = category;
   if (subcategory) query.subcategory  = subcategory;
   if (featured)    query.isFeatured   = true;
   if (newArrival)  query.isNewArrival = true;
-  return B2BProduct.find(query)
-    .populate('category',    'name slug')
-    .populate('subcategory', 'name slug')
-    .sort({ createdAt: -1 })
-    .lean();
+
+  return fetchProducts(query);
 }
 
 export async function getB2BProductBySlug(slug) {
-  await connectDB();
-  return B2BProduct.findOne({ slug, isActive: true })
-    .populate('category',    'name slug')
-    .populate('subcategory', 'name slug')
-    .lean();
+  return fetchProducts({ slug, isActive: true }, { bySlug: true });
 }
 
 export async function getAllB2BProducts() {
-  await connectDB();
-  return B2BProduct.find({})
-    .populate('category',    'name slug')
-    .populate('subcategory', 'name slug')
-    .sort({ createdAt: -1 })
-    .lean();
+  return fetchProducts({});
 }
 
 export async function createB2BProduct(data) {

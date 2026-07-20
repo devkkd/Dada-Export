@@ -1,32 +1,46 @@
 import { getToken } from 'next-auth/jwt';
 import { NextResponse } from 'next/server';
+import { verifyRetailToken } from '@/lib/retailAuth';
 
-export async function middleware(req) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+const RETAIL_NEXTAUTH_SECRET = process.env.RETAIL_NEXTAUTH_SECRET || process.env.NEXTAUTH_SECRET;
+const ADMIN_NEXTAUTH_SECRET  = process.env.NEXTAUTH_SECRET;
+
+export async function proxy(req) {
+  const retailToken = req.cookies.get('retail_token')?.value;
+  const hasValidRetailToken = retailToken ? await verifyRetailToken(retailToken) : false;
+
+  const adminToken = await getToken({
+    req,
+    secret: ADMIN_NEXTAUTH_SECRET,
+    cookieName: 'next-auth.session-token',
+  });
+
+  const retailNextAuthToken = await getToken({
+    req,
+    secret: RETAIL_NEXTAUTH_SECRET,
+    cookieName: 'retail-next-auth.session-token',
+  });
+
   const { pathname } = req.nextUrl;
 
   // ── Admin routes ──────────────────────────────────────────
-  // /admin/login is public — let it through
   if (pathname === '/admin/login') {
-    // if already logged in as admin, redirect to dashboard
-    if (token?.role === 'admin') {
+    if (adminToken?.role === 'admin') {
       return NextResponse.redirect(new URL('/admin', req.url));
     }
     return NextResponse.next();
   }
 
-  // all other /admin/* routes require admin session
   if (pathname.startsWith('/admin')) {
-    if (!token || token.role !== 'admin') {
+    if (!adminToken || adminToken.role !== 'admin') {
       return NextResponse.redirect(new URL('/admin/login', req.url));
     }
     return NextResponse.next();
   }
 
   // ── Retail protected routes ────────────────────────────────
-  // cart and account require a logged-in retail user
-  if (pathname.startsWith('/retail/cart') || pathname.startsWith('/retail/account')) {
-    if (!token) {
+  if (pathname.startsWith('/retail/account')) {
+    if (!retailNextAuthToken && !hasValidRetailToken) {
       const url = new URL('/retail', req.url);
       url.searchParams.set('login', 'true');
       return NextResponse.redirect(url);
@@ -39,7 +53,6 @@ export async function middleware(req) {
 export const config = {
   matcher: [
     '/admin/:path*',
-    '/retail/cart/:path*',
     '/retail/account/:path*',
   ],
 };

@@ -75,7 +75,7 @@ const [currentImage, setCurrentImage] = useState(0);
         <>
             <div className="w-full bg-[#FFF7F2] flex flex-col">
                 {/* Hero Image Section */}
-               <div className="relative w-full h-[30vh] sm:h-[40vh] md:h-[40vh] lg:h-[70vh] overflow-hidden">
+               <div className="relative w-full h-[30vh] sm:h-[40vh] md:h-[40vh] lg:h-[80vh] overflow-hidden">
   <Image
   key={currentImage}
   src={heroImages[currentImage]}

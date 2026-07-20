@@ -14,6 +14,31 @@ export default function B2BProductDetail({ product, similar = [] }) {
   const [selectedSize,  setSelectedSize]  = useState(product.sizes?.[0] || '');
   const [quantity,      setQuantity]      = useState(product.moq || 50);
 
+  const [cartToast, setCartToast] = useState(false);
+
+  const addToCart = () => {
+    const cart = JSON.parse(localStorage.getItem('b2b_cart') || '[]');
+    const idx  = cart.findIndex(
+      (item) => item.slug === product.slug && item.size === selectedSize
+    );
+    if (idx !== -1) {
+      cart[idx].quantity += quantity;
+    } else {
+      cart.push({
+        slug:     product.slug,
+        name:     product.name,
+        image:    images[0],
+        size:     selectedSize,
+        color:    selectedColor,
+        quantity,
+        moq:      product.moq,
+      });
+    }
+    localStorage.setItem('b2b_cart', JSON.stringify(cart));
+    setCartToast(true);
+    setTimeout(() => setCartToast(false), 2500);
+  };
+
   const formattedPrice = product.price
     ? `₹${product.price.toLocaleString('en-IN')}`
     : null;
@@ -170,32 +195,25 @@ export default function B2BProductDetail({ product, similar = [] }) {
                 Enquire Now
               </Link>
               <button
-                onClick={() => {
-                  const cart = JSON.parse(localStorage.getItem('b2b_cart') || '[]');
-                  const idx  = cart.findIndex(
-                    (item) => item.slug === product.slug && item.size === selectedSize
-                  );
-                  if (idx !== -1) {
-                    cart[idx].quantity += quantity;
-                  } else {
-                    cart.push({
-                      slug:     product.slug,
-                      name:     product.name,
-                      image:    images[0],
-                      size:     selectedSize,
-                      color:    selectedColor,
-                      quantity,
-                      moq:      product.moq,
-                    });
-                  }
-                  localStorage.setItem('b2b_cart', JSON.stringify(cart));
-                  alert(`${quantity} Pieces Added To Cart`);
-                }}
-                className="h-[54px] rounded-full border-2 border-[#95565E] text-[#95565E] font-semibold hover:bg-[#95565E] hover:text-white transition text-sm"
+                onClick={addToCart}
+                className="h-[54px] rounded-full border-2 border-[#95565E] text-[#95565E] font-semibold hover:bg-[#95565E] hover:text-white transition text-sm relative"
               >
-                Add To Cart
+                {cartToast ? '✓ Added to Cart' : 'Add To Cart'}
               </button>
             </div>
+
+            {/* Cart toast */}
+            {cartToast && (
+              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1a1a1a] text-white text-sm font-medium px-6 py-3 rounded-full shadow-xl flex items-center gap-3 animate-bounce-once">
+                <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                {quantity} pcs added to cart
+                <Link href="/b2b/cart" className="ml-1 text-[#95565E] font-semibold underline underline-offset-2">
+                  View Cart →
+                </Link>
+              </div>
+            )}
 
             {/* Product Info Sections */}
             <div className="space-y-10 text-[#0E0E0E]">

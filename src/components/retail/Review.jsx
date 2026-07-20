@@ -100,27 +100,6 @@ const reviews = [
           </div>
         </div>
       </div>
-      <style jsx>{`
-  @keyframes marquee {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-50%);
-    }
-  }
-
-  .animate-marquee {
-    display: flex;
-    width: max-content;
-    animation: marquee 40s linear infinite;
-    will-change: transform;
-  }
-
-  .animate-marquee:hover {
-    animation-play-state: paused;
-  }
-`}</style>
     </section>
   );
 };

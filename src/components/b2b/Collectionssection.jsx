@@ -2,89 +2,83 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useB2BData } from '@/components/b2b/B2BDataContext';
+
+// Fallback images if category has no image
+const FALLBACK_IMAGES = ['/b2b/home/dress1.png', '/b2b/home/dress2.png', '/b2b/home/dress3.png'];
 
 export default function CollectionsSection() {
+  const { categories } = useB2BData();
+
+  // Top-level categories only, max 6 for the grid
+  const topLevel = categories.filter((c) => !c.parentId).slice(0, 6);
+
   return (
-   <section className="w-full bg-[#FFFEF9] pt-10 sm:pt-20 md:pt-24 pb-6 sm:pb-8">
+    <section className="w-full bg-[#FFFEF9] pt-10 sm:pt-20 md:pt-24 pb-6 sm:pb-8">
       <div className="max-w-7xl mx-auto px-6">
-        
+
         {/* Header */}
-       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 mb-8 sm:mb-16">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 mb-8 sm:mb-16">
           <div className="flex items-center gap-4">
             <div className="w-12 sm:w-16 h-px bg-[#95565E]"></div>
             <span className="text-xs sm:text-sm font-medium tracking-widest uppercase text-[#95565E]">
               BROWSE BY CATEGORY
             </span>
           </div>
-
-         <h2 className="text-2xl sm:text-4xl font-bold text-center text-black leading-tight">
+          <h2 className="text-2xl sm:text-4xl font-bold text-center text-black leading-tight">
             Shop Our Collections
           </h2>
-
-          <Link
-  href="#"
-  style={{ color: '#95565E' }}
-  className="text-xs sm:text-sm font-medium tracking-widest uppercase flex items-center gap-1"
->
-  SEE ALL COLLECTIONS →
-</Link>
-        </div>
-
-        {/* Collections Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-          
-          {/* Dresses */}
-          <Link href="/dresses" className="group">
-           <div className="relative overflow-hidden rounded-[24px] h-[220px] sm:h-[300px] md:h-[420px] lg:h-[460px] xl:h-[500px] mb-4 shadow-lg">
-  <Image
-    src="/b2b/home/dress1.png"
-    alt="Dresses"
-    fill
-    className="object-cover transition-transform duration-700 group-hover:scale-110"
-  />
-</div>
-            <div className="text-center">
-              <h3 className="text-2xl font-bold mb-2 text-black">
-  Dresses
-</h3>
-              <p className="text-sm text-black/70">Maxi Dress | Midi Dress | Short Dress</p>
-            </div>
-          </Link>
-
-          {/* Tops */}
-          <Link href="/tops" className="group">
-            <div className="relative overflow-hidden rounded-[24px] h-[220px] sm:h-[300px] md:h-[420px] lg:h-[460px] xl:h-[500px] mb-4 shadow-lg">
-  <Image
-    src="/b2b/home/dress2.png"
-    alt="Tops"
-    fill
-    className="object-cover transition-transform duration-700 group-hover:scale-110"
-  />
-</div>
-            <div className="text-center">
-            <h3 className="text-[13px] sm:text-sm text-black/60 leading-relaxed">
-  Tops</h3>
-              <p className="text-sm text-black/70">Crop Tops | Shirts | T-Shirts</p>
-            </div>
-          </Link>
-
-          {/* Bottom Wear */}
-          <Link href="/bottom-wear" className="group">
-            <div className="relative overflow-hidden rounded-[24px] h-[220px] sm:h-[300px] md:h-[420px] lg:h-[460px] xl:h-[500px] mb-4 shadow-lg">
-  <Image
-    src="/b2b/home/dress3.png"
-    alt="Bottom Wear"
-    fill
-    className="object-cover transition-transform duration-700 group-hover:scale-110"
-  />
-</div>
-            <div className="text-center">
-            <h3 className="text-2xl font-bold mb-2 text-black">
-  Bottom Wear</h3>
-              <p className="text-[13px] sm:text-sm text-black/60 leading-relaxed">Pants | Skirts | Shorts</p>
-            </div>
+          <Link href="/b2b/categories" style={{ color: '#95565E' }} className="text-xs sm:text-sm font-medium tracking-widest uppercase flex items-center gap-1">
+            SEE ALL COLLECTIONS →
           </Link>
         </div>
+
+        {/* Collections Grid — 3 cols, or 2 if fewer categories */}
+        {topLevel.length === 0 ? (
+          // Fallback to static while DB is empty
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+            {[
+              { name: 'Dresses', img: '/b2b/home/dress1.png', sub: 'Maxi Dress | Midi Dress | Short Dress', slug: 'dresses' },
+              { name: 'Tops',    img: '/b2b/home/dress2.png', sub: 'Crop Tops | Shirts | T-Shirts',          slug: 'tops'    },
+              { name: 'Bottom Wear', img: '/b2b/home/dress3.png', sub: 'Pants | Skirts | Shorts',           slug: 'bottom-wear' },
+            ].map((item) => (
+              <Link key={item.slug} href={`/b2b/category/${item.slug}`} className="group">
+                <div className="relative overflow-hidden rounded-[24px] h-[220px] sm:h-[300px] md:h-[420px] lg:h-[460px] xl:h-[500px] mb-4 shadow-lg">
+                  <Image src={item.img} alt={item.name} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-2xl font-bold mb-2 text-black">{item.name}</h3>
+                  <p className="text-sm text-black/70">{item.sub}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className={`grid gap-6 sm:gap-8 ${topLevel.length >= 3 ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 md:grid-cols-2'}`}>
+            {topLevel.map((cat, idx) => {
+              const subNames = (cat.subcategories || []).map((s) => s.name).join(' | ');
+              const imgSrc = cat.image || FALLBACK_IMAGES[idx % FALLBACK_IMAGES.length];
+
+              return (
+                <Link key={cat._id} href={`/b2b/category/${cat.slug}`} className="group">
+                  <div className="relative overflow-hidden rounded-[24px] h-[220px] sm:h-[300px] md:h-[420px] lg:h-[460px] xl:h-[500px] mb-4 shadow-lg">
+                    <Image
+                      src={imgSrc}
+                      alt={cat.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold mb-2 text-black">{cat.name}</h3>
+                    {subNames && <p className="text-sm text-black/70">{subNames}</p>}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );

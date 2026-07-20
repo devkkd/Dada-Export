@@ -54,6 +54,11 @@ export default function B2BProductForm({ product }) {
   const [newImageFiles, setNewImageFiles]   = useState([]);   // File[]
   const [newImagePreviews, setNewImagePreviews] = useState([]); // string[]
 
+  // SKU image fetch state
+  const [skuInput, setSkuInput]         = useState('');
+  const [skuFetching, setSkuFetching]   = useState(false);
+  const [skuFetchMsg, setSkuFetchMsg]   = useState('');
+
   // colors
   const [colors, setColors] = useState(
     product?.colors?.length
@@ -120,6 +125,32 @@ export default function B2BProductForm({ product }) {
         ? f.sizes.filter((s) => s !== size)
         : [...f.sizes, size],
     }));
+  };
+
+  // Fetch images from R2 by SKU
+  const fetchImagesFromR2 = async () => {
+    if (!skuInput.trim()) return;
+    setSkuFetching(true);
+    setSkuFetchMsg('');
+    try {
+      const res  = await fetch(`/api/admin/r2-images?sku=${encodeURIComponent(skuInput.trim())}&site=b2b`);
+      const json = await res.json();
+      if (json.success && json.images.length > 0) {
+        // Add to existing images, avoid duplicates
+        setExistingImages((prev) => {
+          const existing = new Set(prev);
+          const newUrls = json.images.filter((u) => !existing.has(u));
+          return [...prev, ...newUrls];
+        });
+        setSkuFetchMsg(`✓ Found ${json.images.length} image${json.images.length !== 1 ? 's' : ''} for ${skuInput.trim()}`);
+      } else {
+        setSkuFetchMsg(`No images found on R2 for SKU: ${skuInput.trim()}`);
+      }
+    } catch (err) {
+      setSkuFetchMsg(`Error: ${err.message}`);
+    } finally {
+      setSkuFetching(false);
+    }
   };
 
   // image selection
@@ -238,6 +269,41 @@ export default function B2BProductForm({ product }) {
 
       {/* ── Section 1: Images ─────────────────────────────── */}
       <Section title="Product Images">
+
+        {/* SKU Auto-fetch from R2 */}
+        <div className="flex gap-2 mb-4">
+          <input
+            type="text"
+            value={skuInput}
+            onChange={(e) => { setSkuInput(e.target.value); setSkuFetchMsg(''); }}
+            onKeyDown={(e) => e.key === 'Enter' && fetchImagesFromR2()}
+            placeholder="Enter SKU to fetch images from R2 (e.g. SKU001)"
+            className={`${inputCls} flex-1`}
+          />
+          <button
+            type="button"
+            onClick={fetchImagesFromR2}
+            disabled={!skuInput.trim() || skuFetching}
+            className="px-4 py-2.5 rounded-xl bg-[#95565E] hover:bg-[#7f4750] text-white text-sm font-medium transition-colors disabled:opacity-50 whitespace-nowrap flex items-center gap-2"
+          >
+            {skuFetching ? (
+              <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Fetching…</>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                </svg>
+                Fetch from R2
+              </>
+            )}
+          </button>
+        </div>
+        {skuFetchMsg && (
+          <p className={`text-xs mb-3 px-3 py-2 rounded-lg ${skuFetchMsg.startsWith('✓') ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
+            {skuFetchMsg}
+          </p>
+        )}
+
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
           {/* Existing images */}
           {existingImages.map((url, i) => (

@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 
 // Cloudflare R2 is S3-compatible — we use the AWS SDK pointed at R2's endpoint
 const R2 = new S3Client({
@@ -55,4 +55,24 @@ export async function deleteFromR2(key) {
 export function getKeyFromUrl(url) {
   if (!url) return null;
   return url.replace(`${PUBLIC_URL}/`, '');
+}
+
+/**
+ * List all R2 objects under a given prefix
+ * e.g. prefix = "bulk-images/b2b/SKU001" → returns all files starting with that
+ * Returns array of { key, url }
+ */
+export async function listR2Objects(prefix) {
+  const command = new ListObjectsV2Command({
+    Bucket: BUCKET,
+    Prefix: prefix,
+  });
+
+  const response = await R2.send(command);
+  const contents = response.Contents || [];
+
+  return contents.map((obj) => ({
+    key: obj.Key,
+    url: `${PUBLIC_URL}/${obj.Key}`,
+  }));
 }

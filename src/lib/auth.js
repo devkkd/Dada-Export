@@ -9,12 +9,14 @@ export const authOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        const adminEmail    = process.env.ADMIN_EMAIL;
-        const adminPassword = process.env.ADMIN_PASSWORD;
+        const adminEmail    = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+        const adminPassword = process.env.ADMIN_PASSWORD?.trim();
+        const email         = credentials?.email?.trim().toLowerCase();
+        const password      = credentials?.password?.trim();
 
         if (
-          credentials?.email    === adminEmail &&
-          credentials?.password === adminPassword
+          email === adminEmail &&
+          password === adminPassword
         ) {
           return {
             id:    '1',

@@ -19,6 +19,7 @@ export async function GET(request) {
     const categories = await getAllCategories();
     return NextResponse.json({ success: true, data: categories });
   } catch (error) {
+    console.error('[GET /api/admin/categories]', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

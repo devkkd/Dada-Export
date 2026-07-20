@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 
-export default function AdminLoginPage() {
-  const router = useRouter();
+function LoginForm() {
+  const searchParams = useSearchParams();
 
   const [form, setForm]       = useState({ email: '', password: '' });
   const [error, setError]     = useState('');
@@ -24,19 +24,15 @@ export default function AdminLoginPage() {
 
     setLoading(true);
 
-    const result = await signIn('credentials', {
-      redirect:  false,
-      email:     form.email,
-      password:  form.password,
+    const callbackUrl = searchParams.get('callbackUrl') || '/admin';
+    await signIn('credentials', {
+      redirect:   true,
+      email:      form.email.trim().toLowerCase(),
+      password:   form.password.trim(),
+      callbackUrl,
     });
 
     setLoading(false);
-
-    if (result?.error) {
-      setError('Invalid email or password.');
-    } else {
-      router.push('/admin');
-    }
   };
 
   return (
@@ -68,12 +64,12 @@ export default function AdminLoginPage() {
           <form onSubmit={handleSubmit} className="px-10 py-8 space-y-5">
 
             {/* Error banner */}
-            {error && (
+            {(error || searchParams.get('error')) && (
               <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
                 <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
-                {error}
+                {error || (searchParams.get('error') === 'CredentialsSignin' ? 'Invalid email or password.' : 'Login failed.')}
               </div>
             )}
 
@@ -176,5 +172,17 @@ export default function AdminLoginPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#F5F0EB] flex items-center justify-center p-4">
+        <div className="text-[#95565E] font-medium text-sm">Loading login...</div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }

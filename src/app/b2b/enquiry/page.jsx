@@ -20,7 +20,7 @@ export default function B2BEnquiry() {
     });
 
     const [productInfo, setProductInfo] = useState(null);
-    const [submitted, setSubmitted] = useState(false);
+    const [submitted, setSubmitted] = useState(null); // null | 'loading' | 'done'
 
     // Get product from query params
   useEffect(() => {
@@ -61,27 +61,46 @@ export default function B2BEnquiry() {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        setSubmitted(true);
-        console.log('Form submitted:', formData);
-        // Here you can integrate with backend or email service
-        setTimeout(() => {
-            setSubmitted(false);
-            setFormData({
-                fullName: '',
-                designation: '',
-                email: '',
-                whatsapp: '',
-                companyName: '',
-                businessType: '',
-                country: '',
-                city: '',
-                quantity: '',
-                productStyle: '',
-                message: '',
+        setSubmitted('loading');
+        try {
+            const payload = {
+                name:         formData.fullName,
+                designation:  formData.designation,
+                email:        formData.email,
+                phone:        formData.whatsapp,
+                company:      formData.companyName,
+                businessType: formData.businessType,
+                country:      formData.country,
+                city:         formData.city,
+                quantity:     formData.quantity,
+                message:      formData.productStyle
+                                ? `${formData.message}\n\nSpecific Product/Style: ${formData.productStyle}`
+                                : formData.message,
+                type:    'single',
+                products: productInfo ? [{
+                    productSlug: productInfo.id,
+                    name:        productInfo.title,
+                    image:       productInfo.image,
+                    size:        productInfo.size,
+                    quantity:    1,
+                }] : [],
+            };
+            const res  = await fetch('/api/b2b/inquiry', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(payload),
             });
-        }, 3000);
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            setSubmitted('done');
+            setFormData({ fullName: '', designation: '', email: '', whatsapp: '', companyName: '', businessType: '', country: '', city: '', quantity: '', productStyle: '', message: '' });
+            setTimeout(() => setSubmitted(null), 5000);
+        } catch (err) {
+            alert('Error: ' + err.message);
+            setSubmitted(null);
+        }
     };
 
     const businessTypeOptions = [
@@ -404,9 +423,11 @@ export default function B2BEnquiry() {
                     <button
                         type="submit"
                         onClick={handleSubmit}
-                        className="px-8 md:px-10 py-4 bg-[#95565E] text-white rounded-full font-semibold hover:bg-[#7a3f47] transition-all duration-300 text-base md:text-lg"
+                        disabled={submitted === 'loading'}
+                        className="px-8 md:px-10 py-4 bg-[#95565E] text-white rounded-full font-semibold hover:bg-[#7a3f47] transition-all duration-300 text-base md:text-lg disabled:opacity-70 flex items-center gap-2"
                     >
-                        {submitted ? '✓ Submitted Successfully!' : 'Submit B2B Enquiry'}
+                        {submitted === 'loading' && <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
+                        {submitted === 'done' ? '✓ Submitted Successfully!' : submitted === 'loading' ? 'Submitting…' : 'Submit B2B Enquiry'}
                     </button>
 
                     <a

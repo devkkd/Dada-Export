@@ -86,7 +86,7 @@ export default function HeroSection() {
     <>
       <div className="w-full bg-[#FFFEF9] flex flex-col">
         {/* Hero Image Section */}
-        <div className="relative w-full h-[30vh] sm:h-[40vh] md:h-[40vh] lg:h-[70vh] overflow-hidden">
+        <div className="relative w-full h-[30vh] sm:h-[40vh] md:h-[40vh] lg:h-[80vh] overflow-hidden">
 
           <Image
             key={currentImage}

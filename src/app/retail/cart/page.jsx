@@ -2,18 +2,46 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { useRetailAuth } from '@/context/RetailAuthContext';
 
 export default function CartPage() {
+  const { isLoggedIn, isLoading, localCartSynced } = useRetailAuth();
   const [items, setItems] = useState([]);
+  const [loadingCart, setLoadingCart] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    const cart =
-      JSON.parse(localStorage.getItem('cart')) || [];
+    const loadCart = async () => {
+      if (isLoading || (isLoggedIn && !localCartSynced)) return;
 
-    setItems(cart);
-  }, []);
+      if (isLoggedIn) {
+        setLoadingCart(true);
+        try {
+          const res = await fetch('/api/retail/cart', {
+            credentials: 'include',
+          });
+          const data = await res.json();
+          setItems(data.data?.items || []);
+        } catch {
+          setItems([]);
+          setError('Unable to load cart.');
+        } finally {
+          setLoadingCart(false);
+        }
+      } else {
+        try {
+          const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
+          setItems(Array.isArray(localCart) ? localCart : []);
+        } catch {
+          setItems([]);
+        }
+      }
+    };
 
-  const updateQty = (index, type) => {
+    loadCart();
+  }, [isLoggedIn, isLoading, localCartSynced]);
+
+  const updateQty = async (index, type) => {
     const updated = [...items];
 
     if (type === 'plus') {
@@ -28,24 +56,59 @@ export default function CartPage() {
       updated[index].quantity -= 1;
     }
 
-    setItems(updated);
+    if (isLoggedIn) {
+      try {
+        const item = updated[index];
+        const res = await fetch('/api/retail/cart', {
+          method: 'PATCH',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ itemId: item._id, quantity: item.quantity }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setItems(data.data?.items || updated);
+          return;
+        }
+        throw new Error(data.error || 'Update failed');
+      } catch (err) {
+        console.error(err);
+        setError('Could not update quantity.');
+        return;
+      }
+    }
 
-    localStorage.setItem(
-      'cart',
-      JSON.stringify(updated)
-    );
+    setItems(updated);
+    localStorage.setItem('cart', JSON.stringify(updated));
   };
 
-  const removeItem = (index) => {
-    const updated =
-      items.filter((_, i) => i !== index);
+  const removeItem = async (index) => {
+    const updated = items.filter((_, i) => i !== index);
+
+    if (isLoggedIn) {
+      try {
+        const item = items[index];
+        const res = await fetch('/api/retail/cart', {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ itemId: item._id }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setItems(data.data?.items || updated);
+          return;
+        }
+        throw new Error(data.error || 'Remove failed');
+      } catch (err) {
+        console.error(err);
+        setError('Could not remove item.');
+        return;
+      }
+    }
 
     setItems(updated);
-
-    localStorage.setItem(
-      'cart',
-      JSON.stringify(updated)
-    );
+    localStorage.setItem('cart', JSON.stringify(updated));
   };
 
 
@@ -87,9 +150,10 @@ export default function CartPage() {
 
                   <div className="relative w-full md:w-[180px] h-[240px] md:h-[240px] flex-shrink-0">
                     <Image
-                      src={item.image}
-                      alt={item.name}
+                      src={item.image || '/retail/home/7.png'}
+                      alt={item.name || 'Product'}
                       fill
+                      unoptimized
                       className="object-cover rounded-2xl"
                     />
                   </div>
@@ -175,16 +239,13 @@ export default function CartPage() {
 
            <button
   onClick={() => {
-    const logged =
-      localStorage.getItem('accountLogin');
-
-    if (logged === 'true') {
-      window.location.href =
-        '/retail/checkout';
+    if (isLoggedIn) {
+      window.location.href = '/retail/checkout';
     } else {
-      document.dispatchEvent(
-        new CustomEvent('openLoginPopup')
-      );
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('retailLoginCallback', '/retail/checkout');
+      }
+      document.dispatchEvent(new CustomEvent('openLoginPopup'));
     }
   }}
   className="w-full mt-6 h-[58px] rounded-full bg-[#281000] text-white font-semibold text-base md:text-lg hover:opacity-90 transition"
