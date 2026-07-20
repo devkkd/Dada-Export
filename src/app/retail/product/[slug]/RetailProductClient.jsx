@@ -329,119 +329,42 @@ Custom Fabric Selected: ${selectedFabricCustom}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-start">
 
-          {/* LEFT: IMAGE GALLERY */}
-          <div className="col-span-1 lg:col-span-6 space-y-6">
+          {/* LEFT: IMAGE GALLERY — same layout as B2B page */}
+          <div className="col-span-1 lg:col-span-6 space-y-4">
 
-            {/* Desktop Custom Curved Images and Rotating Badge Layout */}
-            <div className="hidden lg:block relative pl-12 pr-4 py-2">
-              
-              {/* Overlapping Central Badge */}
-              <div className="absolute left-[-20px] top-1/2 -translate-y-1/2 z-20 w-36 h-36 rounded-full bg-[#FFF9F5] border-2 border-[#281000]/15 flex flex-col items-center justify-center shadow-xl text-[#281000] p-4 select-none">
-                <div className="relative w-full h-full flex items-center justify-center">
-                  {/* Spinning text outer */}
-                  <div className="absolute inset-0 animate-[spin_25s_linear_infinite] flex items-center justify-center">
-                    <svg viewBox="0 0 100 100" className="w-full h-full">
-                      <path id="textPath" d="M 50,50 m -38,0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0" fill="none" />
-                      <text className="text-[7.2px] font-black fill-[#281000] tracking-[0.16em] uppercase">
-                        <textPath href="#textPath" startOffset="0%">
-                          • Handcrafted With Love • Delivered Worldwide
-                        </textPath>
-                      </text>
-                    </svg>
-                  </div>
-                  {/* Center Globe Icon */}
-                  <div className="w-16 h-16 rounded-full border border-[#281000]/10 flex items-center justify-center bg-white shadow-inner">
-                    <svg className="w-8 h-8 text-[#281000]/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                      <path d="M2 12h20" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              {/* Image Stack */}
-              <div className="space-y-6">
-                
-                {/* Top Image: Rounded Top-Left Curve */}
-                <div className="relative w-full aspect-[16/11] rounded-tl-[180px] rounded-bl-[24px] rounded-tr-[32px] rounded-br-[32px] overflow-hidden border border-[#E8DED8] bg-white group shadow-sm">
-                  <Image
-                    src={displayImages[activeImage]}
-                    alt={`${product.name} - View ${activeImage + 1}`}
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                </div>
-
-                {/* Bottom Image: Rounded Bottom-Left Curve */}
-                <div className="relative w-full aspect-[16/11] rounded-tl-[24px] rounded-bl-[180px] rounded-tr-[32px] rounded-br-[32px] overflow-hidden border border-[#E8DED8] bg-white group shadow-sm">
-                  <Image
-                    src={displayImages[(activeImage + 1) % displayImages.length]}
-                    alt={`${product.name} - View ${((activeImage + 1) % displayImages.length) + 1}`}
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  {/* Floating overlays for quality highlights */}
-                  <div className="absolute right-4 bottom-4 left-20 z-10 flex flex-col items-end gap-2.5">
-                    <div className="bg-[#FFF9F5]/95 text-[#281000] px-3.5 py-2 rounded-xl border border-[#E8DED8]/40 shadow-md space-y-0.5 text-right w-fit shrink-0 backdrop-blur-[2px]">
-                      <p className="text-[9px] font-extrabold uppercase tracking-wider text-amber-800">Premium Quality Fabric</p>
-                      <p className="text-[11px] text-neutral-800 font-bold">100% Premium Rayon - Ultra Soft</p>
-                    </div>
-                    <div className="bg-[#FFF9F5]/95 text-[#281000] px-3.5 py-2 rounded-xl border border-[#E8DED8]/40 shadow-md space-y-1 text-right w-fit shrink-0 backdrop-blur-[2px]">
-                      <p className="text-[9px] font-extrabold uppercase tracking-wider text-amber-800">Wash & Care</p>
-                      <div className="flex gap-2 text-[10px] text-neutral-800 font-extrabold items-center justify-end">
-                        <span>🧺 Cold Wash</span>
-                        <span>💨 Warm Iron</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Thumbnails list below stack */}
-              <div className="flex gap-3 justify-center pt-6">
-                {images.slice(0, 4).map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setActiveImage(idx)}
-                    className={`relative w-16 h-20 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${
-                      activeImage === idx ? 'border-[#281000] scale-105 shadow-md' : 'border-stone-200 opacity-80 hover:opacity-100'
-                    }`}
-                  >
-                    <Image src={img} alt={`Thumbnail ${idx + 1}`} fill sizes="64px" className="object-cover" />
-                  </button>
-                ))}
-              </div>
-
+            {/* Main Image */}
+            <div className="relative aspect-[4/5] w-full rounded-3xl overflow-hidden shadow-xl bg-white border border-[#E8DED8]">
+              <Image
+                src={displayImages[activeImage]}
+                alt={`${product.name} - View ${activeImage + 1}`}
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover transition-transform duration-500 hover:scale-105"
+                priority
+              />
             </div>
 
-            {/* Mobile Carousel / Thumb Slider */}
-            <div className="lg:hidden space-y-4">
-              <div className="relative aspect-[3/4] w-full rounded-[24px] overflow-hidden border border-[#E8DED8] bg-white shadow-sm">
-                <Image
-                  src={displayImages[activeImage]}
-                  alt={product.name}
-                  fill
-                  sizes="100vw"
-                  className="object-cover transition-all duration-300"
-                />
-              </div>
-              <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none justify-center">
-                {displayImages.slice(0, 4).map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setActiveImage(idx)}
-                    className={`relative w-16 h-20 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${
-                      activeImage === idx ? 'border-[#281000] scale-105 shadow-md' : 'border-stone-200'
-                    }`}
-                  >
-                    <Image src={img} alt={`Thumbnail ${idx + 1}`} fill sizes="64px" className="object-cover" />
-                  </button>
-                ))}
-              </div>
+            {/* Thumbnail Grid — 4 columns */}
+            <div className="grid grid-cols-4 gap-3">
+              {images.slice(0, 4).map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActiveImage(idx)}
+                  className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
+                    activeImage === idx
+                      ? 'border-[#281000] shadow-md scale-[1.03]'
+                      : 'border-stone-200 opacity-80 hover:opacity-100 hover:border-[#281000]'
+                  }`}
+                >
+                  <Image
+                    src={img}
+                    alt={`Thumbnail ${idx + 1}`}
+                    fill
+                    sizes="100px"
+                    className="object-cover"
+                  />
+                </button>
+              ))}
             </div>
 
           </div>
@@ -745,6 +668,9 @@ Custom Fabric Selected: ${selectedFabricCustom}
               </div>
             )}
 
+            {/* How to Measure Guide */}
+            <HowToMeasure />
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
 
               {/* Col 1: Personal Details */}
@@ -1029,5 +955,254 @@ Custom Fabric Selected: ${selectedFabricCustom}
 
       <CheckoutDrawer open={buyNowOpen} onClose={() => setBuyNowOpen(false)} product={buyNowProduct} />
     </>
+  );
+}
+
+/* ─── How to Measure Guide ───────────────────────────────────── */
+
+const BODY_MEASUREMENTS = [
+  {
+    label: 'Height',
+    desc:  'Stand straight against a wall without footwear. Measure from the floor to the top of your head.',
+    svg: (
+      <svg viewBox="0 0 60 120" fill="none" className="w-10 h-20">
+        <line x1="30" y1="5" x2="30" y2="115" stroke="#281000" strokeWidth="1.5" strokeDasharray="3 2" />
+        <line x1="20" y1="5"  x2="40" y2="5"   stroke="#281000" strokeWidth="1.5" />
+        <line x1="20" y1="115" x2="40" y2="115" stroke="#281000" strokeWidth="1.5" />
+        <circle cx="30" cy="18" r="7" stroke="#281000" strokeWidth="1.2" />
+        <path d="M22 35 Q30 28 38 35 L40 65 Q30 68 20 65 Z" stroke="#281000" strokeWidth="1.2" fill="none" />
+        <path d="M20 65 L18 95 M40 65 L42 95" stroke="#281000" strokeWidth="1.2" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Bust / Breast Size',
+    desc:  'Wrap the tape around the fullest part of your chest, across your nipple line. Keep the tape parallel to the floor. Do not pull tight — keep it comfortably snug.',
+    svg: (
+      <svg viewBox="0 0 60 80" fill="none" className="w-10 h-14">
+        <circle cx="30" cy="12" r="7" stroke="#281000" strokeWidth="1.2" />
+        <path d="M22 27 Q30 20 38 27 L40 55 Q30 58 20 55 Z" stroke="#281000" strokeWidth="1.2" fill="none" />
+        <path d="M15 36 Q30 42 45 36" stroke="#281000" strokeWidth="1.5" strokeDasharray="2 1.5" />
+        <line x1="15" y1="33" x2="15" y2="39" stroke="#281000" strokeWidth="1.2" />
+        <line x1="45" y1="33" x2="45" y2="39" stroke="#281000" strokeWidth="1.2" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Waist',
+    desc:  'Measure around the narrowest part of your natural waist, usually just above your belly button. Breathe out gently before measuring.',
+    svg: (
+      <svg viewBox="0 0 60 80" fill="none" className="w-10 h-14">
+        <circle cx="30" cy="12" r="7" stroke="#281000" strokeWidth="1.2" />
+        <path d="M22 27 Q30 20 38 27 L40 55 Q30 58 20 55 Z" stroke="#281000" strokeWidth="1.2" fill="none" />
+        <path d="M19 43 Q30 47 41 43" stroke="#281000" strokeWidth="1.5" strokeDasharray="2 1.5" />
+        <line x1="19" y1="40" x2="19" y2="46" stroke="#281000" strokeWidth="1.2" />
+        <line x1="41" y1="40" x2="41" y2="46" stroke="#281000" strokeWidth="1.2" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Belly / Tummy Size',
+    desc:  'Measure around the fullest part of your belly — typically 2–3 inches below your belly button. This is the widest point of your midsection.',
+    svg: (
+      <svg viewBox="0 0 60 80" fill="none" className="w-10 h-14">
+        <circle cx="30" cy="12" r="7" stroke="#281000" strokeWidth="1.2" />
+        <path d="M22 27 Q30 20 38 27 L42 58 Q30 62 18 58 Z" stroke="#281000" strokeWidth="1.2" fill="none" />
+        <path d="M16 50 Q30 56 44 50" stroke="#281000" strokeWidth="1.5" strokeDasharray="2 1.5" />
+        <line x1="16" y1="47" x2="16" y2="53" stroke="#281000" strokeWidth="1.2" />
+        <line x1="44" y1="47" x2="44" y2="53" stroke="#281000" strokeWidth="1.2" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Hip Size',
+    desc:  'Measure around the fullest part of your hips and seat, usually about 8–9 inches below your natural waist.',
+    svg: (
+      <svg viewBox="0 0 60 90" fill="none" className="w-10 h-16">
+        <circle cx="30" cy="10" r="7" stroke="#281000" strokeWidth="1.2" />
+        <path d="M22 25 Q30 18 38 25 L44 60 Q30 65 16 60 Z" stroke="#281000" strokeWidth="1.2" fill="none" />
+        <path d="M14 58 Q30 65 46 58" stroke="#281000" strokeWidth="1.5" strokeDasharray="2 1.5" />
+        <line x1="14" y1="55" x2="14" y2="61" stroke="#281000" strokeWidth="1.2" />
+        <line x1="46" y1="55" x2="46" y2="61" stroke="#281000" strokeWidth="1.2" />
+      </svg>
+    ),
+  },
+];
+
+const LENGTH_MEASUREMENTS = [
+  {
+    label: 'Shoulder Width',
+    desc:  'Measure from the tip of one shoulder across to the tip of the other shoulder, across the back.',
+    svg: (
+      <svg viewBox="0 0 80 60" fill="none" className="w-14 h-10">
+        <circle cx="40" cy="10" r="7" stroke="#281000" strokeWidth="1.2" />
+        <path d="M10 30 Q40 22 70 30 L68 50 Q40 54 12 50 Z" stroke="#281000" strokeWidth="1.2" fill="none" />
+        <line x1="10" y1="24" x2="70" y2="24" stroke="#281000" strokeWidth="1.5" strokeDasharray="2 1.5" />
+        <line x1="10" y1="20" x2="10" y2="28" stroke="#281000" strokeWidth="1.2" />
+        <line x1="70" y1="20" x2="70" y2="28" stroke="#281000" strokeWidth="1.2" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Chest Width (Front)',
+    desc:  'Measure across the front of your chest from armhole to armhole, at the fullest point.',
+    svg: (
+      <svg viewBox="0 0 80 60" fill="none" className="w-14 h-10">
+        <circle cx="40" cy="10" r="7" stroke="#281000" strokeWidth="1.2" />
+        <path d="M15 28 Q40 20 65 28 L63 50 Q40 54 17 50 Z" stroke="#281000" strokeWidth="1.2" fill="none" />
+        <line x1="20" y1="32" x2="60" y2="32" stroke="#281000" strokeWidth="1.5" strokeDasharray="2 1.5" />
+        <line x1="20" y1="29" x2="20" y2="35" stroke="#281000" strokeWidth="1.2" />
+        <line x1="60" y1="29" x2="60" y2="35" stroke="#281000" strokeWidth="1.2" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Top Length / Blouse Length',
+    desc:  'Measure from the highest point of your shoulder down to where you want the top to end. For crop tops, this is typically 12–16 inches.',
+    svg: (
+      <svg viewBox="0 0 60 90" fill="none" className="w-10 h-16">
+        <circle cx="30" cy="10" r="7" stroke="#281000" strokeWidth="1.2" />
+        <path d="M18 25 Q30 18 42 25 L44 55 Q30 58 16 55 Z" stroke="#281000" strokeWidth="1.2" fill="none" />
+        <line x1="48" y1="23" x2="48" y2="55" stroke="#281000" strokeWidth="1.5" strokeDasharray="2 1.5" />
+        <line x1="44" y1="23" x2="52" y2="23" stroke="#281000" strokeWidth="1.2" />
+        <line x1="44" y1="55" x2="52" y2="55" stroke="#281000" strokeWidth="1.2" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Skirt / Dress Length',
+    desc:  'Measure from your natural waist down to where you want the garment to end. For maxis, measure to the floor. For minis, measure to your preferred hem.',
+    svg: (
+      <svg viewBox="0 0 60 120" fill="none" className="w-10 h-20">
+        <circle cx="30" cy="10" r="7" stroke="#281000" strokeWidth="1.2" />
+        <path d="M22 25 Q30 18 38 25 L44 115 Q30 118 16 115 Z" stroke="#281000" strokeWidth="1.2" fill="none" />
+        <line x1="48" y1="36" x2="48" y2="115" stroke="#281000" strokeWidth="1.5" strokeDasharray="2 1.5" />
+        <line x1="44" y1="36" x2="52" y2="36" stroke="#281000" strokeWidth="1.2" />
+        <line x1="44" y1="115" x2="52" y2="115" stroke="#281000" strokeWidth="1.2" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Inseam / Trouser Length',
+    desc:  'Measure from your crotch down to your ankle along the inner leg. Best measured on a pair of well-fitting trousers you already own.',
+    svg: (
+      <svg viewBox="0 0 60 120" fill="none" className="w-10 h-20">
+        <circle cx="30" cy="10" r="7" stroke="#281000" strokeWidth="1.2" />
+        <path d="M18 25 Q30 18 42 25 L44 65 L38 115 M16 65 L22 115" stroke="#281000" strokeWidth="1.2" fill="none" />
+        <path d="M16 65 L44 65" stroke="#281000" strokeWidth="1" />
+        <line x1="48" y1="65" x2="48" y2="115" stroke="#281000" strokeWidth="1.5" strokeDasharray="2 1.5" />
+        <line x1="44" y1="65" x2="52" y2="65" stroke="#281000" strokeWidth="1.2" />
+        <line x1="44" y1="115" x2="52" y2="115" stroke="#281000" strokeWidth="1.2" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Back Length',
+    desc:  'Measure from the base of your neck (the prominent bone at the top of your spine) straight down to your natural waist.',
+    svg: (
+      <svg viewBox="0 0 60 90" fill="none" className="w-10 h-16">
+        <circle cx="30" cy="10" r="7" stroke="#281000" strokeWidth="1.2" />
+        <path d="M18 25 Q30 18 42 25 L40 75 Q30 78 20 75 Z" stroke="#281000" strokeWidth="1.2" fill="none" />
+        <line x1="48" y1="24" x2="48" y2="52" stroke="#281000" strokeWidth="1.5" strokeDasharray="2 1.5" />
+        <line x1="44" y1="24" x2="52" y2="24" stroke="#281000" strokeWidth="1.2" />
+        <line x1="44" y1="52" x2="52" y2="52" stroke="#281000" strokeWidth="1.2" />
+      </svg>
+    ),
+  },
+];
+
+function HowToMeasure() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="rounded-2xl border border-[#E8DED8] overflow-hidden bg-[#FFFBF8]">
+      {/* Toggle header */}
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between px-6 py-4 text-left group"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-[#281000]/8 flex items-center justify-center shrink-0">
+            <svg className="w-4 h-4 text-[#281000]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 5a2 2 0 012-2h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-sm font-bold text-[#281000] uppercase tracking-wider">How to Measure</p>
+            <p className="text-xs text-[#7C6C63] font-medium">Tap to view the complete measurement guide with illustrations</p>
+          </div>
+        </div>
+        <svg
+          className={`w-5 h-5 text-[#281000] transition-transform duration-300 shrink-0 ${open ? 'rotate-180' : ''}`}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {/* Expanded content */}
+      {open && (
+        <div className="border-t border-[#E8DED8] px-6 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-16 gap-y-2">
+
+            {/* Body Measurements column */}
+            <div>
+              <h4 className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#281000] mb-6 pb-2 border-b border-[#E8DED8]">
+                Body Measurements
+              </h4>
+              <div className="space-y-7">
+                {BODY_MEASUREMENTS.map((item) => (
+                  <div key={item.label} className="flex items-start gap-5">
+                    {/* Illustration */}
+                    <div className="shrink-0 w-14 flex items-center justify-center opacity-70">
+                      {item.svg}
+                    </div>
+                    {/* Text */}
+                    <div>
+                      <p className="text-[13px] font-bold text-[#281000] mb-1">{item.label} :</p>
+                      <p className="text-[12px] text-[#5C4D44] leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Length Measurements column */}
+            <div className="mt-8 lg:mt-0">
+              <h4 className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#281000] mb-6 pb-2 border-b border-[#E8DED8]">
+                Length Measurements
+              </h4>
+              <div className="space-y-7">
+                {LENGTH_MEASUREMENTS.map((item) => (
+                  <div key={item.label} className="flex items-start gap-5">
+                    {/* Illustration */}
+                    <div className="shrink-0 w-14 flex items-center justify-center opacity-70">
+                      {item.svg}
+                    </div>
+                    {/* Text */}
+                    <div>
+                      <p className="text-[13px] font-bold text-[#281000] mb-1">{item.label} :</p>
+                      <p className="text-[12px] text-[#5C4D44] leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+
+          {/* Tip banner */}
+          <div className="mt-8 bg-[#FFF3E3] border border-[#F2D27A]/40 rounded-xl px-5 py-3.5 flex items-start gap-3">
+            <svg className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-[12px] text-amber-900 font-medium leading-relaxed">
+              <span className="font-extrabold">Pro Tip:</span> Always measure over your innerwear (not over clothes). Use a soft measuring tape and keep it parallel to the floor for all circumference measurements. When in doubt, measure twice.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
