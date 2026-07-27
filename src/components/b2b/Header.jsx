@@ -122,11 +122,11 @@ export default function Header() {
             </button>
 
             {/* User */}
-            <button onClick={() => isLoggedIn ? router.push('/b2b/account') : setShowLogin(true)} className="text-white/80 hover:text-white transition-colors">
+            {/* <button onClick={() => isLoggedIn ? router.push('/b2b/account') : setShowLogin(true)} className="text-white/80 hover:text-white transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7" />
               </svg>
-            </button>
+            </button> */}
 
             {/* Cart */}
             <Link href="/b2b/cart" className="text-white hover:text-white/80 transition-colors">

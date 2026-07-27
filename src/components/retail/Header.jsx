@@ -127,10 +127,12 @@ export default function HeaderRetail() {
             ) : (
               <button
                 onClick={() => setLoginModalOpen(true)}
-                className="rounded-full border border-white/50 px-3 py-2 text-sm text-white/80 hover:text-white hover:border-white transition-colors"
+                className="rounded-full px-3 py-2 text-sm  transition-colors"
                 aria-label="Sign In"
               >
-                Sign In
+                 <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7" />
+                             </svg>
               </button>
             )}
 
