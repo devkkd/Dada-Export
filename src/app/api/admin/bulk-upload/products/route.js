@@ -51,20 +51,33 @@ async function makeUniqueSlug(name, sku, Model) {
 }
 
 /**
+ * Normalise a SKU string for consistent key lookup:
+ * collapse whitespace around hyphens, replace remaining spaces with hyphens, trim.
+ * e.g. "RTS- 611" → "RTS-611", "RTS 529" → "RTS-529"
+ */
+const normaliseSku = (sku) =>
+  String(sku)
+    .trim()
+    .replace(/\s*-\s*/g, '-')
+    .replace(/\s+/g, '-');
+
+/**
  * Resolve image URLs for a SKU — 3 sources in priority order:
  * 1. Freshly uploaded this session (uploadedFiles map)
  * 2. imageUrl column in Excel (comma-separated direct URLs)
  * 3. Auto-list from R2 by SKU prefix (images already on R2)
  */
 async function resolveImages(sku, site, uploadedFiles, imageUrlCell) {
+  const normSku = normaliseSku(sku);
   // Source 1: freshly uploaded this session
   const images = [];
   for (let n = 1; n <= 10; n++) {
-    const found = uploadedFiles[`${sku}-${n}`];
+    const found = uploadedFiles[`${normSku}-${n}`] || uploadedFiles[`${sku}-${n}`];
     if (found) images.push(found);
   }
-  if (images.length === 0 && uploadedFiles[sku]) {
-    images.push(uploadedFiles[sku]);
+  if (images.length === 0) {
+    const found = uploadedFiles[normSku] || uploadedFiles[sku];
+    if (found) images.push(found);
   }
   if (images.length > 0) return images;
 
@@ -76,15 +89,19 @@ async function resolveImages(sku, site, uploadedFiles, imageUrlCell) {
 
   // Source 3: list R2 objects with SKU as prefix
   try {
-    // Try bulk-images/{site}/{SKU} first
-    let r2 = await listR2Objects(`bulk-images/${site}/${sku}`);
+    // Try bulk-images/{site}/{normSku} first
+    let r2 = await listR2Objects(`bulk-images/${site}/${normSku}`);
+    if (r2.length === 0 && normSku !== sku) {
+      r2 = await listR2Objects(`bulk-images/${site}/${sku}`);
+    }
     if (r2.length === 0) {
-      // Try without site subfolder
+      r2 = await listR2Objects(`bulk-images/${normSku}`);
+    }
+    if (r2.length === 0 && normSku !== sku) {
       r2 = await listR2Objects(`bulk-images/${sku}`);
     }
     if (r2.length === 0) {
-      // Try root level
-      r2 = await listR2Objects(sku);
+      r2 = await listR2Objects(normSku);
     }
     if (r2.length > 0) {
       r2.sort((a, b) => a.key.localeCompare(b.key));
@@ -143,7 +160,7 @@ export async function POST(request) {
     for (let i = 0; i < rows.length; i++) {
       const row    = rows[i];
       const rowNum = i + 2;
-      const sku    = String(row.SKU   || '').trim();
+      const sku    = normaliseSku(String(row.SKU || ''));
       const name   = String(row.name  || '').trim();
 
       if (!sku || !name) {

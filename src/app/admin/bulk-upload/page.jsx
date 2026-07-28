@@ -27,7 +27,14 @@ export default function BulkUploadPage() {
   const folderInputRef = useRef();
   const xlsInputRef    = useRef();
 
-  const stemFromFilename = (name) => name.replace(/\.[^/.]+$/, '');
+  // Strip extension and normalise: collapse spaces around hyphens / replace spaces with hyphens
+  // so "RTS 529 3.jpg" and "RTS-529-3.jpg" both become "RTS-529-3"
+  const stemFromFilename = (name) => {
+    const noExt = name.replace(/\.[^/.]+$/, '');
+    return noExt
+      .replace(/\s*-\s*/g, '-') // "RTS - 529 - 3" → "RTS-529-3"
+      .replace(/\s+/g, '-');    // "RTS 529 3"     → "RTS-529-3"
+  };
 
   /* ── Image / Folder Select ──────────────────────── */
   const handleImgSelect = useCallback((e) => {
