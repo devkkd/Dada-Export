@@ -65,10 +65,12 @@ const normaliseSku = (sku) =>
  * Resolve image URLs for a SKU — 3 sources in priority order:
  * 1. Freshly uploaded this session (uploadedFiles map)
  * 2. imageUrl column in Excel (comma-separated direct URLs)
- * 3. Auto-list from R2 by SKU prefix (images already on R2)
+ * 3. Auto-list from R2 — searches entire bucket for any object whose key
+ *    contains the SKU as a path segment (handles any folder nesting)
  */
 async function resolveImages(sku, site, uploadedFiles, imageUrlCell) {
   const normSku = normaliseSku(sku);
+
   // Source 1: freshly uploaded this session
   const images = [];
   for (let n = 1; n <= 10; n++) {
@@ -87,24 +89,46 @@ async function resolveImages(sku, site, uploadedFiles, imageUrlCell) {
     if (urls.length > 0) return urls;
   }
 
-  // Source 3: list R2 objects with SKU as prefix
+  // Source 3: Search R2 — try progressively broader prefixes to find SKU folder
+  // Handles structures like:
+  //   bulk-images/b2b/RTS-504/RTS-504-1.JPG
+  //   bulk-images/b2b/web/web/RTS-504/RTS-504-1.JPG
+  //   bulk-images/RTS-504-1.JPG
   try {
-    // Try bulk-images/{site}/{normSku} first
-    let r2 = await listR2Objects(`bulk-images/${site}/${normSku}`);
-    if (r2.length === 0 && normSku !== sku) {
-      r2 = await listR2Objects(`bulk-images/${site}/${sku}`);
+    const prefixesToTry = [
+      `bulk-images/${site}/${normSku}/`,   // direct: bulk-images/b2b/RTS-504/
+      `bulk-images/${site}/${normSku}-`,   // flat:   bulk-images/b2b/RTS-504-1.jpg
+      `bulk-images/${normSku}/`,           // no site folder
+      `bulk-images/${normSku}-`,
+    ];
+
+    // Also do a broad search under bulk-images/{site}/ and filter by SKU in key
+    // This catches arbitrary nesting like web/web/RTS-504/
+    let r2 = [];
+    for (const prefix of prefixesToTry) {
+      r2 = await listR2Objects(prefix);
+      if (r2.length > 0) break;
     }
+
+    // Broad fallback: list everything under bulk-images/{site}/ and filter by SKU
     if (r2.length === 0) {
-      r2 = await listR2Objects(`bulk-images/${normSku}`);
+      const all = await listR2Objects(`bulk-images/${site}/`);
+      // Match objects whose key contains /{SKU}/ or /{SKU}- (case-insensitive)
+      const skuUpper = normSku.toUpperCase();
+      const skuLower = normSku.toLowerCase();
+      r2 = all.filter((o) => {
+        const k = o.key;
+        return (
+          k.includes(`/${normSku}/`) || k.includes(`/${normSku}-`) ||
+          k.includes(`/${skuUpper}/`) || k.includes(`/${skuUpper}-`) ||
+          k.includes(`/${skuLower}/`) || k.includes(`/${skuLower}-`)
+        );
+      });
     }
-    if (r2.length === 0 && normSku !== sku) {
-      r2 = await listR2Objects(`bulk-images/${sku}`);
-    }
-    if (r2.length === 0) {
-      r2 = await listR2Objects(normSku);
-    }
+
     if (r2.length > 0) {
-      r2.sort((a, b) => a.key.localeCompare(b.key));
+      // Sort so -1 comes before -2 etc.
+      r2.sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }));
       return r2.map((o) => o.url);
     }
   } catch (err) {

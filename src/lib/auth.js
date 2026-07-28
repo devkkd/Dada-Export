@@ -66,14 +66,12 @@ export const authOptions = {
   // Secure cookie settings for production (HTTPS)
   cookies: {
     sessionToken: {
-      name: process.env.NODE_ENV === 'production'
-        ? '__Secure-next-auth.session-token'
-        : 'next-auth.session-token',
+      name: 'admin-next-auth.session-token',
       options: {
         httpOnly: true,
         sameSite: 'lax',
         path:     '/',
-        secure:   process.env.NODE_ENV === 'production',
+        secure:   process.env.NEXTAUTH_URL?.startsWith('https://') ?? process.env.NODE_ENV === 'production',
       },
     },
   },

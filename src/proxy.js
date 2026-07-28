@@ -12,7 +12,7 @@ export async function proxy(req) {
   const adminToken = await getToken({
     req,
     secret: ADMIN_NEXTAUTH_SECRET,
-    cookieName: 'next-auth.session-token',
+    cookieName: 'admin-next-auth.session-token',
   });
 
   const retailNextAuthToken = await getToken({
