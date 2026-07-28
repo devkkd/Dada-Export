@@ -54,9 +54,27 @@ export const authOptions = {
   },
 
   pages: {
-    signIn: '/admin/login',   // redirect here on unauthenticated
-    error:  '/admin/login',   // redirect here on error
+    signIn: '/admin/login',
+    error:  '/admin/login',
   },
 
+  // Must be explicitly set — NextAuth uses this to build callback URLs in production
+  url: process.env.NEXTAUTH_URL,
+
   secret: process.env.NEXTAUTH_SECRET,
+
+  // Secure cookie settings for production (HTTPS)
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === 'production'
+        ? '__Secure-next-auth.session-token'
+        : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path:     '/',
+        secure:   process.env.NODE_ENV === 'production',
+      },
+    },
+  },
 };
