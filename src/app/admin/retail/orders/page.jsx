@@ -28,6 +28,15 @@ export default function RetailOrdersPage() {
   
   const [trackingIdInput, setTrackingIdInput] = useState('');
   const [adminNoteInput, setAdminNoteInput]   = useState('');
+  const [paymentStatusInput, setPaymentStatusInput] = useState('pending');
+  const [paymentIdInput, setPaymentIdInput]   = useState('');
+
+  const [syncingShiprocket, setSyncingShiprocket] = useState(false);
+  const [srWeight, setSrWeight] = useState('0.5');
+  const [srLength, setSrLength] = useState('10');
+  const [srBreadth, setSrBreadth] = useState('10');
+  const [srHeight, setSrHeight] = useState('10');
+  const [srPickup, setSrPickup] = useState('Primary');
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -70,8 +79,57 @@ export default function RetailOrdersPage() {
     setSelected(order);
     setTrackingIdInput(order.trackingId || '');
     setAdminNoteInput(order.adminNote || '');
-  };
+    setPaymentStatusInput(order.paymentStatus || 'pending');
+    setPaymentIdInput(order.paymentId || '');
 
+    setSrWeight('0.5');
+    setSrLength('10');
+    setSrBreadth('10');
+    setSrHeight('10');
+    setSrPickup('Primary');
+  };
+  const handleSyncToShiprocket = async () => {
+    if (!selected) return;
+    setSyncingShiprocket(true);
+    try {
+      const res = await fetch('/api/admin/retail/shiprocket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: selected._id,
+          weight: Number(srWeight),
+          length: Number(srLength),
+          breadth: Number(srBreadth),
+          height: Number(srHeight),
+          pickupLocation: srPickup,
+        }),
+      });
+
+      const json = await res.json();
+      if (res.ok) {
+        alert(json.message || 'Successfully synced order to Shiprocket!');
+        // Update local state to show synced IDs
+        const updatedOrder = {
+          ...selected,
+          shiprocketOrderId: json.data.shiprocketOrderId,
+          shiprocketShipmentId: json.data.shiprocketShipmentId,
+          trackingId: json.data.trackingId || selected.trackingId,
+          orderStatus: 'processing',
+        };
+        setSelected(updatedOrder);
+        setTrackingIdInput(updatedOrder.trackingId);
+        setOrders((prev) =>
+          prev.map((o) => o._id === selected._id ? updatedOrder : o)
+        );
+      } else {
+        alert(json.error || 'Failed to sync to Shiprocket.');
+      }
+    } catch (err) {
+      alert('Network error syncing shipment to Shiprocket.');
+    } finally {
+      setSyncingShiprocket(false);
+    }
+  };
   const updateStatus = async (id, orderStatus) => {
     setUpdating(true);
     try {
@@ -104,13 +162,31 @@ export default function RetailOrdersPage() {
         body:    JSON.stringify({
           trackingId: trackingIdInput,
           adminNote:  adminNoteInput,
+          paymentStatus: paymentStatusInput,
+          paymentId: paymentIdInput,
         }),
       });
       const json = await res.json();
       if (json.success) {
-        setSelected((prev) => ({ ...prev, trackingId: trackingIdInput, adminNote: adminNoteInput }));
+        setSelected((prev) => ({
+          ...prev,
+          trackingId: trackingIdInput,
+          adminNote: adminNoteInput,
+          paymentStatus: paymentStatusInput,
+          paymentId: paymentIdInput,
+        }));
         setOrders((prev) =>
-          prev.map((o) => o._id === selected._id ? { ...o, trackingId: trackingIdInput, adminNote: adminNoteInput } : o)
+          prev.map((o) =>
+            o._id === selected._id
+              ? {
+                  ...o,
+                  trackingId: trackingIdInput,
+                  adminNote: adminNoteInput,
+                  paymentStatus: paymentStatusInput,
+                  paymentId: paymentIdInput,
+                }
+              : o
+          )
         );
         alert('Order details saved successfully!');
       }
@@ -325,16 +401,39 @@ export default function RetailOrdersPage() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-800 text-sm truncate">{item.name}</p>
+                        <p className="font-semibold text-gray-800 text-sm flex items-center gap-1.5 flex-wrap">
+                          <span>{item.name}</span>
+                          {item.isCustomized && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                              Custom Sized (+₹{item.customizationPrice})
+                            </span>
+                          )}
+                        </p>
                         <div className="flex flex-wrap gap-x-4 text-xs text-gray-400 mt-1">
                           {item.size && <span>Size: <strong className="text-gray-600">{item.size}</strong></span>}
                           {item.color && <span>Color: <strong className="text-gray-600">{item.color}</strong></span>}
                           <span>Qty: <strong className="text-gray-600">{item.quantity}</strong></span>
                         </div>
+
+                        {item.isCustomized && item.customizationFields && (
+                          <div className="mt-2 text-[11px] bg-amber-50/40 rounded-xl p-3 border border-amber-200/30 text-gray-700 space-y-1">
+                            <span className="font-bold text-[9px] uppercase tracking-wider text-amber-800 block mb-1">Custom Sizing Details:</span>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-1">
+                              {Object.entries(
+                                typeof item.customizationFields.toJSON === 'function' ? item.customizationFields.toJSON() :
+                                (item.customizationFields instanceof Map ? Object.fromEntries(item.customizationFields) : item.customizationFields)
+                              ).map(([key, val]) => (
+                                <p key={key} className="truncate">
+                                  <span className="capitalize text-gray-400 font-semibold">{key.replace(/([A-Z])/g, ' $1')}:</span> <strong className="text-gray-600 font-semibold">{val || 'N/A'}</strong>
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="font-semibold text-gray-800 text-sm">₹{(item.price || 0).toLocaleString('en-IN')}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">Total: ₹{((item.price || 0) * (item.quantity || 1)).toLocaleString('en-IN')}</p>
+                        <p className="font-semibold text-gray-800 text-sm">₹{((item.price || 0) + (item.customizationPrice || 0)).toLocaleString('en-IN')}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">Total: ₹{(((item.price || 0) + (item.customizationPrice || 0)) * (item.quantity || 1)).toLocaleString('en-IN')}</p>
                       </div>
                     </div>
                   ))}
@@ -369,19 +468,149 @@ export default function RetailOrdersPage() {
                 </div>
               </div>
 
-              {/* Payment Details */}
+              {/* Shiprocket Shipping Gateway Sync */}
+              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-sm">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Shiprocket Fulfillment</h4>
+                  {selected.shiprocketOrderId && (
+                    <span className="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-200">
+                      Synced
+                    </span>
+                  )}
+                </div>
+
+                {selected.shiprocketOrderId ? (
+                  <div className="space-y-2 bg-white rounded-xl p-3 border border-gray-100 text-xs">
+                    <p className="text-gray-700">
+                      <span className="font-semibold text-gray-400">Shiprocket Order ID:</span>{' '}
+                      <strong className="text-gray-800">{selected.shiprocketOrderId}</strong>
+                    </p>
+                    <p className="text-gray-700">
+                      <span className="font-semibold text-gray-400">Shiprocket Shipment ID:</span>{' '}
+                      <strong className="text-gray-800">{selected.shiprocketShipmentId}</strong>
+                    </p>
+                    {selected.trackingId && (
+                      <p className="text-gray-700">
+                        <span className="font-semibold text-gray-400">AWB Tracking Code:</span>{' '}
+                        <span className="font-mono text-gray-800 font-bold bg-gray-50 px-2 py-0.5 rounded">{selected.trackingId}</span>
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      Configure parcel weight and box dimensions to sync this paid order to your Shiprocket portal.
+                    </p>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-gray-500 mb-1">Weight (kg)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          value={srWeight}
+                          onChange={(e) => setSrWeight(e.target.value)}
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 focus:border-[#95565E] focus:outline-none text-xs bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-gray-500 mb-1">Pickup Location</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Primary"
+                          value={srPickup}
+                          onChange={(e) => setSrPickup(e.target.value)}
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 focus:border-[#95565E] focus:outline-none text-xs bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-gray-500 mb-1">Length (cm)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={srLength}
+                          onChange={(e) => setSrLength(e.target.value)}
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 focus:border-[#95565E] focus:outline-none text-xs bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-gray-500 mb-1">Width (cm)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={srBreadth}
+                          onChange={(e) => setSrBreadth(e.target.value)}
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 focus:border-[#95565E] focus:outline-none text-xs bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-gray-500 mb-1">Height (cm)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={srHeight}
+                          onChange={(e) => setSrHeight(e.target.value)}
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 focus:border-[#95565E] focus:outline-none text-xs bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={syncingShiprocket || selected.paymentStatus !== 'paid'}
+                      onClick={handleSyncToShiprocket}
+                      className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-xl transition shadow-xs disabled:opacity-50 flex items-center justify-center gap-1.5"
+                    >
+                      {syncingShiprocket ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Syncing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>🚀</span>
+                          <span>Sync to Shiprocket</span>
+                        </>
+                      )}
+                    </button>
+                    {selected.paymentStatus !== 'paid' && (
+                      <p className="text-[10px] text-red-500 font-semibold text-center">
+                        * Note: Only Paid orders can be synced to Shiprocket.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Payment Details (Editable for Admin) */}
               <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-sm">
                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Payment Info</h4>
-                <div className="grid grid-cols-2 gap-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs text-gray-400">Payment Status</p>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded border inline-block mt-0.5 ${PAYMENT_CONFIG[selected.paymentStatus]?.cls}`}>
-                      {PAYMENT_CONFIG[selected.paymentStatus]?.label || selected.paymentStatus}
-                    </span>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">Payment Status</label>
+                    <select
+                      value={paymentStatusInput}
+                      onChange={(e) => setPaymentStatusInput(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-[#95565E] focus:outline-none text-xs bg-white font-semibold"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="paid">Paid</option>
+                      <option value="failed">Failed</option>
+                    </select>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400">Razorpay Payment ID</p>
-                    <p className="font-mono text-xs text-gray-800 mt-0.5 select-all">{selected.paymentId || 'No Razorpay Transaction ID'}</p>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">Razorpay Payment ID</label>
+                    <input
+                      type="text"
+                      placeholder="No Transaction ID"
+                      value={paymentIdInput}
+                      onChange={(e) => setPaymentIdInput(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-[#95565E] focus:outline-none text-xs bg-white font-mono"
+                    />
                   </div>
                 </div>
               </div>

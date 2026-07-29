@@ -9,7 +9,7 @@ import LoginModal               from '@/components/retail/LoginModel';
 
 export default function HeaderRetail() {
   const { categories }                  = useRetailData();
-  const { user, isLoggedIn, isLoading } = useRetailAuth();
+  const { user, isLoggedIn, isLoading, cartCount } = useRetailAuth();
 
   const [openMenu,         setOpenMenu]         = useState(null);
   const [mobileMenuOpen,   setMobileMenuOpen]   = useState(false);
@@ -137,11 +137,16 @@ export default function HeaderRetail() {
             )}
 
             {/* Cart */}
-            <Link href="/retail/cart" className="text-white hover:text-white/80 transition-colors">
+            <Link href="/retail/cart" className="text-white hover:text-white/80 transition-colors relative">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M6 8h12l-1 10a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 8z" />
                 <path d="M9 8V6a3 3 0 1 1 6 0v2" />
               </svg>
+              {cartCount > 0 && (
+                <span className="absolute -top-1.5 -right-2.5 bg-[#FEE6C3] text-[#281000] text-[9px] font-bold rounded-full w-4.5 h-4.5 flex items-center justify-center border border-[#281000]">
+                  {cartCount}
+                </span>
+              )}
             </Link>
 
             {/* Mobile menu toggle */}

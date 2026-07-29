@@ -1,12 +1,76 @@
 // components/NewArrivalSection.tsx
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRetailData } from '@/components/retail/RetailDataContext';
+import { useRetailAuth } from '@/context/RetailAuthContext';
 
 export default function NewArrivalSection() {
   const { allProducts, categories } = useRetailData();
+  const { isLoggedIn, refreshCartCount } = useRetailAuth();
+  const [selectedColors, setSelectedColors] = useState({});
+  const [cartSaving, setCartSaving] = useState({});
+
+  const showToast = (message, isSuccess = true) => {
+    if (typeof document === 'undefined') return;
+    const existing = document.getElementById('retail-dynamic-toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'retail-dynamic-toast';
+    toast.className = `fixed bottom-5 right-5 z-[99999] px-6 py-3.5 rounded-full text-white text-xs font-semibold shadow-xl transition-all duration-300 transform translate-y-10 opacity-0 flex items-center gap-2 ${
+      isSuccess ? 'bg-[#281000]' : 'bg-red-600'
+    }`;
+    toast.innerHTML = isSuccess 
+      ? `<span>✓</span> <span>${message}</span>`
+      : `<span>⚠</span> <span>${message}</span>`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.remove('translate-y-10', 'opacity-0'), 50);
+    setTimeout(() => {
+      toast.classList.add('translate-y-10', 'opacity-0');
+      setTimeout(() => toast.remove(), 300);
+    }, 2500);
+  };
+
+  const handleAddToCart = async (e, product) => {
+    e.preventDefault();
+    if (!isLoggedIn) {
+      document.dispatchEvent(new CustomEvent('openLoginPopup'));
+      showToast('Please login to add to cart', false);
+      return;
+    }
+
+    const defaultSize = product.variants?.[0]?.size || 'M';
+    const selectedColor = selectedColors[product._id] || product.colors?.[0]?.name || 'N/A';
+
+    setCartSaving(prev => ({ ...prev, [product._id]: true }));
+    try {
+      const res = await fetch('/api/retail/cart', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: product._id,
+          size: defaultSize,
+          color: selectedColor,
+          quantity: 1,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not add to cart');
+
+      refreshCartCount();
+      showToast('Added to cart successfully!');
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || 'Could not add to cart', false);
+    } finally {
+      setCartSaving(prev => ({ ...prev, [product._id]: false }));
+    }
+  };
 
   // Find 'tops' category
   const cat = categories.find((c) => !c.parentId && c.slug === 'tops');
@@ -59,18 +123,30 @@ export default function NewArrivalSection() {
 
               <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2 mt-2 sm:mt-5">
 
-  <button onClick={(e) => e.preventDefault()} className="w-full sm:w-auto px-2 sm:px-5 py-1.5 sm:py-2.5 border border-[#281000] text-[#281000] rounded-full text-[10px] sm:text-sm font-medium hover:bg-[#281000] hover:text-white transition-all">
-    Add to Cart →
-  </button>
+                <button 
+                  onClick={(e) => handleAddToCart(e, product)} 
+                  disabled={cartSaving[product._id]}
+                  className="w-full sm:w-auto px-2 sm:px-5 py-1.5 sm:py-2.5 border border-[#281000] text-[#281000] rounded-full text-[10px] sm:text-sm font-medium hover:bg-[#281000] hover:text-white transition-all disabled:opacity-50"
+                >
+                  {cartSaving[product._id] ? 'Adding...' : 'Add to Cart →'}
+                </button>
 
-  {product.colors?.length > 0 && (
-  <div className="flex justify-center sm:justify-end items-center gap-2 sm:gap-3">
-    {product.colors.slice(0, 4).map((color, i) => (
-      <div key={i} className="w-3 h-3 sm:w-4 sm:h-4 rounded-full"
-        style={{ backgroundColor: color.hex || '#ccc' }} title={color.name} />
-    ))}
-  </div>
-  )}
+                {product.colors?.length > 0 && (
+                  <div className="flex justify-center sm:justify-end items-center gap-2 sm:gap-3">
+                    {product.colors.slice(0, 4).map((color, i) => (
+                      <button 
+                        key={i} 
+                        onClick={(e) => { 
+                          e.preventDefault(); 
+                          setSelectedColors({ ...selectedColors, [product._id]: color.name }); 
+                        }}
+                        title={color.name} 
+                        className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full transition-all ${selectedColors[product._id] === color.name ? 'ring-2 ring-offset-2 scale-125' : ''}`}
+                        style={{ backgroundColor: color.hex || '#ccc' }} 
+                      />
+                    ))}
+                  </div>
+                )}
 
 </div>
               </div>

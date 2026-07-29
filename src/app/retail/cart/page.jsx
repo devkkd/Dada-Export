@@ -109,20 +109,24 @@ export default function CartPage() {
 
     setItems(updated);
     localStorage.setItem('cart', JSON.stringify(updated));
+  };  const getCleanFields = (fields) => {
+    if (!fields) return {};
+    if (typeof fields.toJSON === 'function') return fields.toJSON();
+    if (fields instanceof Map) return Object.fromEntries(fields);
+    return fields;
   };
-
 
   const totalAmount = items.reduce(
     (acc, item) =>
       acc +
-      item.price *
+      (item.price + (item.customizationPrice || 0)) *
         (item.quantity || 1),
     0
   );
 
   return (
     <div className="bg-[#FFF7F2] min-h-screen">
-    <div className="max-w-[1600px] mx-auto px-8 md:px-12 lg:px-20 xl:px-24 pt-12 pb-20">
+      <div className="max-w-[1600px] mx-auto px-8 md:px-12 lg:px-20 xl:px-24 pt-12 pb-20">
 
         <h1 className="text-2xl md:text-3xl font-semibold text-[#281000] mb-10">
           Shopping Cart
@@ -167,16 +171,41 @@ export default function CartPage() {
                     </h3>
 
                     <div className="mt-3 space-y-1 text-[#0E0E0E]/70 text-[13px] font-normal leading-4">
-  <p>Size: {item.size}</p>
-  <p>Color: {item.color}</p>
-  <p>Fabric: {item.fabric}</p>
-</div>
+                      <p>Size: {item.size}</p>
+                      <p>Color: {item.color}</p>
+                      {item.fabric && <p>Fabric: {item.fabric}</p>}
+                    </div>
+
+                    {item.isCustomized && (
+                      <div className="mt-4">
+                        <details className="cursor-pointer group">
+                          <summary className="text-[12px] font-bold text-[#281000] hover:underline transition-colors select-none flex items-center gap-1.5">
+                            <span>✨</span> View Customization Details
+                          </summary>
+                          <div className="mt-2.5 grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2.5 p-4 rounded-2xl bg-[#FFF9F5] border border-[#E8DED8]/60 text-xs text-neutral-700 font-medium">
+                            {Object.entries(getCleanFields(item.customizationFields)).map(([key, val]) => (
+                              <div key={key} className="flex flex-col border-b border-[#E8DED8]/25 pb-1">
+                                <span className="capitalize text-[9px] text-neutral-400 font-bold uppercase tracking-wider">{key.replace(/([A-Z])/g, ' $1')}</span>
+                                <span className="text-[#281000] font-semibold">{val || 'N/A'}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      </div>
+                    )}
 
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 mt-6">
 
-                      <p className="text-2xl font-semibold text-[#0E0E0E]">
-                        ₹{item.price}
-                      </p>
+                      <div>
+                        <p className="text-2xl font-semibold text-[#0E0E0E]">
+                          ₹{(item.price + (item.customizationPrice || 0)) * (item.quantity || 1)}
+                        </p>
+                        {item.isCustomized && (
+                          <span className="text-[11px] text-neutral-500 font-medium block mt-1">
+                            (Base: ₹{item.price} + Customization: ₹{item.customizationPrice})
+                          </span>
+                        )}
+                      </div>
 
                       {/* Quantity */}
 

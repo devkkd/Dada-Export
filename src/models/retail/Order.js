@@ -8,13 +8,16 @@ const OrderItemSchema = new mongoose.Schema({
   size:      String,
   color:     String,
   quantity:  Number,
+  isCustomized: { type: Boolean, default: false },
+  customizationFields: { type: Map, of: String },
+  customizationPrice: { type: Number, default: 0 },
 });
 
 const OrderSchema = new mongoose.Schema(
   {
     userId: {
       type:     mongoose.Schema.Types.ObjectId,
-      ref:      'User',
+      ref:      'RetailUser',
       required: true,
     },
     items:       [OrderItemSchema],
@@ -27,6 +30,7 @@ const OrderSchema = new mongoose.Schema(
       city:    String,
       state:   String,
       pincode: String,
+      country: String,
     },
 
     paymentStatus: {
@@ -35,6 +39,7 @@ const OrderSchema = new mongoose.Schema(
       default: 'pending',
     },
     paymentId: String, // Razorpay payment ID
+    razorpayOrderId: String, // Razorpay order ID
 
     orderStatus: {
       type:    String,
@@ -45,6 +50,12 @@ const OrderSchema = new mongoose.Schema(
     // admin notes / tracking
     trackingId: String,
     adminNote:  String,
+
+    couponCode:     String,
+    discountAmount: { type: Number, default: 0 },
+
+    shiprocketOrderId:    String,
+    shiprocketShipmentId: String,
   },
   { timestamps: true }
 );

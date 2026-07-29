@@ -156,7 +156,21 @@ export async function POST(request) {
     // Parse Excel
     const buffer   = Buffer.from(await file.arrayBuffer());
     const workbook = XLSX.read(buffer, { type: 'buffer' });
-    const sheet    = workbook.Sheets[workbook.SheetNames[0]];
+    
+    // Find the sheet that has the product data (contains 'SKU' column header)
+    let sheetName = workbook.SheetNames[0];
+    for (const name of workbook.SheetNames) {
+      const sh = workbook.Sheets[name];
+      const range = XLSX.utils.sheet_to_json(sh, { header: 1 });
+      const firstRow = range[0] || [];
+      const hasSku = firstRow.some((h) => String(h || '').trim().toUpperCase() === 'SKU');
+      if (hasSku) {
+        sheetName = name;
+        break;
+      }
+    }
+
+    const sheet    = workbook.Sheets[sheetName];
     const rows     = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
     if (!rows.length) {

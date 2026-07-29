@@ -24,10 +24,14 @@ const ORDER_COLOURS = {
 
 const emptyAddr = {
   label: 'Home', name: '', phone: '',
-  street: '', city: '', state: '', pincode: '',
+  street: '', city: '', state: '', pincode: '', country: '',
   lat: null, lon: null,
   isDefault: false,
 };
+
+const COUNTRIES = [
+  "India", "United States", "United Kingdom", "Canada", "Australia", "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czechia", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Samoa", "San Marino", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+];
 
 function AccountContent() {
   const { user, isLoggedIn, isLoading, logout, refreshUser } = useRetailAuth();
@@ -52,6 +56,11 @@ function AccountContent() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [showAddrForm,  setShowAddrForm]  = useState(false);
   const [mapError,      setMapError]      = useState('');
+  const [expandedOrders, setExpandedOrders] = useState({});
+
+  const toggleOrderExpand = (orderId) => {
+    setExpandedOrders((prev) => ({ ...prev, [orderId]: !prev[orderId] }));
+  };
 
   // URL-driven tab
   useEffect(() => {
@@ -73,17 +82,13 @@ function AccountContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Load addresses when on address tabs
+  // Load addresses and orders on login, and refresh when tab changes
   useEffect(() => {
-    if ([TABS.ADDRESSES, TABS.ADD_ADDR, TABS.EDIT_ADDR].includes(tab) && isLoggedIn) {
+    if (isLoggedIn) {
       fetchAddresses();
+      fetchOrders();
     }
-  }, [tab, isLoggedIn]); // eslint-disable-line
-
-  // Load orders when on orders tab
-  useEffect(() => {
-    if (tab === TABS.ORDERS && isLoggedIn) fetchOrders();
-  }, [tab, isLoggedIn]); // eslint-disable-line
+  }, [isLoggedIn, tab]); // eslint-disable-line
 
   const fetchAddresses = async () => {
     setAddrLoading(true);
@@ -158,6 +163,7 @@ function AccountContent() {
       city:      addr.city      || '',
       state:     addr.state     || '',
       pincode:   addr.pincode   || '',
+      country:   addr.country   || '',
       isDefault: addr.isDefault || false,
     });
     setShowAddrForm(true);
@@ -179,25 +185,62 @@ function AccountContent() {
       async (pos) => {
         const { latitude: lat, longitude: lng } = pos.coords;
         try {
-          const res = await fetch(`/api/geo/reverse?lat=${lat}&lon=${lng}`);
-          const json = await res.json();
-          if (!res.ok || !json.success) {
+          // Attempt client-side reverse geocoding first (more reliable on user's browser residential IP)
+          let json = null;
+          try {
+            const clientRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=${lat}&lon=${lng}&accept-language=en`);
+            if (clientRes.ok) {
+              json = await clientRes.json();
+            }
+          } catch (clientErr) {
+            console.warn('Client-side Nominatim reverse geocode failed, falling back to server:', clientErr);
+          }
+
+          // Fallback to server reverse geocoding API if client fetch fails
+          if (!json || !json.address) {
+            const serverRes = await fetch(`/api/geo/reverse?lat=${lat}&lon=${lng}`);
+            if (serverRes.ok) {
+              const serverJson = await serverRes.json();
+              if (serverJson.success) {
+                json = serverJson.data;
+              }
+            }
+          }
+
+          if (!json || !json.address) {
             // fallback: still set coords so map recenters, but mark mapError
             setAddrForm(prev => ({ ...prev, lat, lon: lng }));
             setMapError('failed');
             return;
           }
-          const a = json.data.address || {};
+
+          const a = json.address || {};
+          
+          // Fallbacks for streets in India / rural areas where road may be missing
+          const streetParts = [
+            a.house_number,
+            a.road,
+            a.neighbourhood,
+            a.suburb,
+            a.city_district
+          ].filter(Boolean);
+
+          const constructedStreet = streetParts.length > 0 
+            ? streetParts.join(', ') 
+            : (a.subdistrict || a.county || '');
+
           setAddrForm(prev => ({
             ...prev,
-            street:  [a.house_number, a.road].filter(Boolean).join(', '),
-            city:    a.city || a.town || a.village || '',
-            state:   a.state || '',
+            street:  constructedStreet,
+            city:    a.city || a.town || a.village || a.county || '',
+            state:   a.state || a.state_district || '',
             pincode: a.postcode || '',
+            country: a.country || '',
             lat,
             lon: lng,
           }));
-        } catch {
+        } catch (err) {
+          console.error('Reverse geocode error:', err);
           setAddrForm(prev => ({ ...prev, lat, lon: lng }));
           setMapError('failed');
         }
@@ -344,10 +387,10 @@ function AccountContent() {
           ) : (
             <div className="space-y-4">
               {orders.map((order) => (
-                <div key={order._id} className="bg-white rounded-2xl border border-[#1a0a00]/8 overflow-hidden">
-                  <div className="px-5 py-4 flex flex-wrap items-center justify-between gap-3 border-b border-[#1a0a00]/6">
+                <div key={order._id} className="bg-white rounded-2xl border border-[#1a0a00]/8 overflow-hidden shadow-sm">
+                  <div className="px-5 py-4 flex flex-wrap items-center justify-between gap-3 border-b border-[#1a0a00]/6 bg-[#FCFAF7]">
                     <div>
-                      <p className="text-[11px] text-[#1a0a00]/40 mb-0.5 tracking-wide">
+                      <p className="text-[11px] font-mono text-[#95565E] font-semibold mb-0.5 tracking-wide">
                         Order #{order._id.slice(-8).toUpperCase()}
                       </p>
                       <p className="text-[11px] text-[#1a0a00]/40">
@@ -358,34 +401,128 @@ function AccountContent() {
                       <span className="text-sm font-semibold text-[#1a0a00]">
                         ₹{order.totalAmount?.toLocaleString('en-IN')}
                       </span>
-                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full capitalize ${ORDER_COLOURS[order.orderStatus] || 'bg-gray-100 text-gray-600'}`}>
+                      <span className={`text-xs font-semibold px-3 py-1 rounded-full capitalize ${ORDER_COLOURS[order.orderStatus] || 'bg-gray-100 text-gray-600'}`}>
                         {order.orderStatus}
                       </span>
                     </div>
                   </div>
+                  
+                  {/* Items list always shown in order card */}
                   <div className="px-5 py-3 divide-y divide-[#1a0a00]/5">
                     {order.items?.map((item, i) => (
-                      <div key={i} className="flex items-center gap-3 py-3">
-                        <div className="relative h-[80px] w-[80px] flex-shrink-0 overflow-hidden rounded-2xl border border-[#E8DED8] bg-[#F7F4EF]">
-                          <Image
-                            src={item.image || '/retail/home/7.png'}
-                            alt={item.name || 'Product'}
-                            fill
-                            unoptimized
-                            className="object-cover"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-[#1a0a00] truncate">{item.name}</p>
-                          <p className="text-xs text-[#1a0a00]/40 mt-0.5">
-                            {[item.size, item.color].filter(Boolean).join(' · ')} · Qty {item.quantity}
+                      <div key={i} className="flex flex-col py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="relative h-[80px] w-[80px] flex-shrink-0 overflow-hidden rounded-2xl border border-[#E8DED8] bg-[#F7F4EF]">
+                            <Image
+                              src={item.image || '/retail/home/7.png'}
+                              alt={item.name || 'Product'}
+                              fill
+                              unoptimized
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-[#1a0a00] flex items-center gap-1.5 flex-wrap">
+                              <span>{item.name}</span>
+                              {item.isCustomized && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                  Customized
+                                </span>
+                              )}
+                            </p>
+                            <p className="text-xs text-[#1a0a00]/40 mt-0.5">
+                              {[item.size, item.color].filter(Boolean).join(' · ')} · Qty {item.quantity}
+                            </p>
+                          </div>
+                          <p className="text-sm text-[#1a0a00] font-medium shrink-0">
+                            ₹{((item.price + (item.customizationPrice || 0)) * item.quantity).toLocaleString('en-IN')}
                           </p>
                         </div>
-                        <p className="text-sm text-[#1a0a00] font-medium shrink-0">
-                          ₹{(item.price * item.quantity).toLocaleString('en-IN')}
-                        </p>
+
+                        {item.isCustomized && item.customizationFields && (
+                          <div className="mt-2 ml-[92px] text-[11px] bg-[#FCFAF7] rounded-xl p-3 border border-[#1a0a00]/5 text-[#1a0a00]/70 space-y-1">
+                            <span className="font-bold text-[9px] uppercase tracking-wider text-amber-800 block mb-0.5">Your Custom Sizing:</span>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-0.5">
+                              {Object.entries(
+                                typeof item.customizationFields.toJSON === 'function' ? item.customizationFields.toJSON() :
+                                (item.customizationFields instanceof Map ? Object.fromEntries(item.customizationFields) : item.customizationFields)
+                              ).map(([key, val]) => (
+                                <p key={key} className="truncate">
+                                  <span className="capitalize text-neutral-400 font-semibold">{key.replace(/([A-Z])/g, ' $1')}:</span> <strong className="text-[#1a0a00]/70 font-semibold">{val || 'N/A'}</strong>
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
+                  </div>
+
+                  {/* Expandable Order Details Section */}
+                  {expandedOrders[order._id] && (
+                    <div className="px-5 py-5 bg-[#FAF8F5] border-t border-[#1a0a00]/5 text-xs text-[#1a0a00]/80 space-y-5">
+                      <div className="grid sm:grid-cols-2 gap-6">
+                        {/* Shipping Address */}
+                        <div className="bg-white p-4 rounded-xl border border-[#1a0a00]/5 shadow-2xs">
+                          <h4 className="font-bold uppercase tracking-wider text-[#1a0a00]/40 text-[10px] mb-2.5">Shipping Address</h4>
+                          <p className="font-semibold text-[#1a0a00] mb-1">{order.shippingAddress?.name || 'Recipients Name'}</p>
+                          <p className="leading-5 text-[#1a0a00]/70">{order.shippingAddress?.street}</p>
+                          <p className="leading-5 text-[#1a0a00]/70">{order.shippingAddress?.city}, {order.shippingAddress?.state} - {order.shippingAddress?.pincode}</p>
+                          {order.shippingAddress?.phone && <p className="mt-2 text-[11px] text-[#1a0a00]/60">Contact: {order.shippingAddress?.phone}</p>}
+                        </div>
+
+                        {/* Payment & Tracking Info */}
+                        <div className="space-y-4">
+                          <div className="bg-white p-4 rounded-xl border border-[#1a0a00]/5 shadow-2xs">
+                            <h4 className="font-bold uppercase tracking-wider text-[#1a0a00]/40 text-[10px] mb-2.5">Payment Details</h4>
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <span className="text-[#1a0a00]/60">Status:</span>
+                              <span className={`px-2.5 py-0.5 rounded-full font-semibold text-[9px] uppercase border inline-block ${
+                                order.paymentStatus === 'paid' ? 'bg-green-50 text-green-700 border-green-200' :
+                                order.paymentStatus === 'failed' ? 'bg-red-50 text-red-700 border-red-200' :
+                                'bg-yellow-50 text-yellow-700 border-yellow-200'
+                              }`}>
+                                {order.paymentStatus || 'pending'}
+                              </span>
+                            </div>
+                            <p className="text-[#1a0a00]/60 mb-0.5">Gateway: <strong>Razorpay</strong></p>
+                            {order.paymentId && (
+                              <p className="text-[#1a0a00]/60">
+                                Payment ID: <span className="font-mono bg-gray-50 px-1 py-0.5 border border-gray-100 rounded select-all text-gray-800">{order.paymentId}</span>
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="bg-white p-4 rounded-xl border border-[#1a0a00]/5 shadow-2xs">
+                            <h4 className="font-bold uppercase tracking-wider text-[#1a0a00]/40 text-[10px] mb-2">Fulfillment & Tracking</h4>
+                            {order.trackingId ? (
+                              <p className="leading-5">
+                                <span className="text-[#1a0a00]/60">AWB Tracking ID: </span>
+                                <span className="font-mono font-semibold bg-gray-50 px-1.5 py-0.5 border border-gray-100 rounded select-all text-gray-800">{order.trackingId}</span>
+                              </p>
+                            ) : (
+                              <p className="text-[#1a0a00]/50 italic leading-5">Awaiting courier shipment / tracking ID allocation.</p>
+                            )}
+                            {order.adminNote && (
+                              <div className="mt-2.5 p-2 bg-[#FFFDFB] border border-amber-100 rounded text-[11px] text-amber-800">
+                                <span className="font-semibold block mb-0.5">Note from Dada-Exports:</span>
+                                {order.adminNote}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Expand / Collapse Button */}
+                  <div className="border-t border-[#1a0a00]/5 text-center bg-[#FAF8F5]">
+                    <button
+                      onClick={() => toggleOrderExpand(order._id)}
+                      className="w-full py-3 text-[11px] font-bold tracking-widest text-[#281000]/60 hover:text-[#281000] hover:bg-[#1a0a00]/5 transition-colors"
+                    >
+                      {expandedOrders[order._id] ? 'HIDE ORDER DETAILS ▲' : 'VIEW ORDER DETAILS ▼'}
+                    </button>
                   </div>
                 </div>
               ))}
@@ -528,7 +665,7 @@ function AccountContent() {
                       setAddrForm({ ...addrForm, name: parts.join(' ').trim() });
                     }}
                     placeholder="Enter your first name"
-                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3.5 text-[13px] outline-none focus:border-[#1a0a00] transition-colors bg-white"
+                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3.5 text-[13px] outline-none focus:border-[#1a0a00] transition-colors bg-white text-[#1a0a00] font-medium"
                   />
                 </div>
                 <div>
@@ -540,7 +677,7 @@ function AccountContent() {
                       setAddrForm({ ...addrForm, name: [first, e.target.value].filter(Boolean).join(' ') });
                     }}
                     placeholder="Enter your last name"
-                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3.5 text-[13px] outline-none focus:border-[#1a0a00] transition-colors bg-white"
+                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3.5 text-[13px] outline-none focus:border-[#1a0a00] transition-colors bg-white text-[#1a0a00] font-medium"
                   />
                 </div>
               </div>
@@ -552,7 +689,7 @@ function AccountContent() {
                     value={addrForm.street}
                     onChange={(e) => setAddrForm({ ...addrForm, street: e.target.value })}
                     placeholder="Enter your house number, street name"
-                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3.5 text-[13px] outline-none focus:border-[#1a0a00] transition-colors bg-white"
+                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3.5 text-[13px] outline-none focus:border-[#1a0a00] transition-colors bg-white text-[#1a0a00] font-medium"
                   />
                 </div>
                 <div>
@@ -561,7 +698,7 @@ function AccountContent() {
                     value={addrForm.label === 'Home' ? '' : addrForm.label}
                     onChange={(e) => setAddrForm({ ...addrForm, label: e.target.value || 'Home' })}
                     placeholder="Enter your area, nearby landmark"
-                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3.5 text-[13px] outline-none focus:border-[#1a0a00] transition-colors bg-white"
+                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3.5 text-[13px] outline-none focus:border-[#1a0a00] transition-colors bg-white text-[#1a0a00] font-medium"
                   />
                 </div>
               </div>
@@ -574,7 +711,7 @@ function AccountContent() {
                     onChange={(e) => setAddrForm({ ...addrForm, pincode: e.target.value })}
                     placeholder="Enter your Pin / Zip / Postal Code"
                     inputMode="numeric"
-                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3.5 text-[13px] outline-none focus:border-[#1a0a00] transition-colors bg-white"
+                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3.5 text-[13px] outline-none focus:border-[#1a0a00] transition-colors bg-white text-[#1a0a00] font-medium"
                   />
                 </div>
                 <div>
@@ -583,7 +720,7 @@ function AccountContent() {
                     value={addrForm.city}
                     onChange={(e) => setAddrForm({ ...addrForm, city: e.target.value })}
                     placeholder="Enter your city name"
-                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3.5 text-[13px] outline-none focus:border-[#1a0a00] transition-colors bg-white"
+                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3.5 text-[13px] outline-none focus:border-[#1a0a00] transition-colors bg-white text-[#1a0a00] font-medium"
                   />
                 </div>
               </div>
@@ -592,16 +729,14 @@ function AccountContent() {
                 <div>
                   <label className="block text-[11px] font-semibold text-[#1a0a00]/50 mb-1.5 uppercase tracking-wide">Country</label>
                   <select
-                    value={addrForm.state.includes('India') ? 'India' : ''}
-                    onChange={(e) => {}}
-                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3.5 text-[13px] outline-none focus:border-[#1a0a00] transition-colors bg-white text-[#1a0a00]/50 appearance-none"
+                    value={addrForm.country || ''}
+                    onChange={(e) => setAddrForm({ ...addrForm, country: e.target.value })}
+                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3.5 text-[13px] outline-none focus:border-[#1a0a00] transition-colors bg-white text-[#1a0a00] font-medium"
                   >
                     <option value="">Select Your Country</option>
-                    <option value="India">India</option>
-                    <option value="USA">United States</option>
-                    <option value="UK">United Kingdom</option>
-                    <option value="Australia">Australia</option>
-                    <option value="Canada">Canada</option>
+                    {COUNTRIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -610,7 +745,7 @@ function AccountContent() {
                     value={addrForm.state}
                     onChange={(e) => setAddrForm({ ...addrForm, state: e.target.value })}
                     placeholder="Select Your State/Province"
-                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3.5 text-[13px] outline-none focus:border-[#1a0a00] transition-colors bg-white"
+                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3.5 text-[13px] outline-none focus:border-[#1a0a00] transition-colors bg-white text-[#1a0a00] font-medium"
                   />
                 </div>
               </div>
@@ -623,14 +758,14 @@ function AccountContent() {
                     onChange={(e) => setAddrForm({ ...addrForm, phone: e.target.value.replace(/\D/g,'').slice(0,10) })}
                     placeholder="Enter your Mobile Number"
                     inputMode="numeric"
-                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3.5 text-[13px] outline-none focus:border-[#1a0a00] transition-colors bg-white"
+                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3.5 text-[13px] outline-none focus:border-[#1a0a00] transition-colors bg-white text-[#1a0a00] font-medium"
                   />
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-[#1a0a00]/50 mb-1.5 uppercase tracking-wide">Alternative Mobile Number</label>
                   <input
                     placeholder="Enter your Alternative Mobile Number"
-                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3.5 text-[13px] outline-none focus:border-[#1a0a00] transition-colors bg-white"
+                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3.5 text-[13px] outline-none focus:border-[#1a0a00] transition-colors bg-white text-[#1a0a00] font-medium"
                   />
                 </div>
               </div>

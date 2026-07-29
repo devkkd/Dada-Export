@@ -2,7 +2,7 @@ import { connectDB } from '@/lib/db';
 import Order from '@/models/retail/Order';
 import { clearCart } from './cartController';
 
-export async function placeOrder(userId, { items, totalAmount, shippingAddress, paymentId }) {
+export async function placeOrder(userId, { items, totalAmount, shippingAddress, paymentId, razorpayOrderId, couponCode, discountAmount }) {
   await connectDB();
   if (!Array.isArray(items) || items.length === 0) {
     throw new Error('No items in order');
@@ -18,10 +18,12 @@ export async function placeOrder(userId, { items, totalAmount, shippingAddress, 
     shippingAddress,
     paymentStatus: paymentId ? 'paid' : 'pending',
     paymentId:     paymentId || null,
+    razorpayOrderId: razorpayOrderId || null,
     orderStatus:   'placed',
+    couponCode:    couponCode || null,
+    discountAmount: Number(discountAmount || 0),
   });
 
-  await clearCart(userId);
   return order;
 }
 
@@ -47,11 +49,13 @@ export async function getAllOrders({ status } = {}) {
 }
 
 // admin: update order status
-export async function updateOrderStatus(id, { orderStatus, trackingId, adminNote }) {
+export async function updateOrderStatus(id, { orderStatus, trackingId, adminNote, paymentStatus, paymentId }) {
   await connectDB();
   const update = {};
   if (orderStatus) update.orderStatus = orderStatus;
   if (trackingId)  update.trackingId  = trackingId;
   if (adminNote)   update.adminNote   = adminNote;
+  if (paymentStatus) update.paymentStatus = paymentStatus;
+  if (paymentId !== undefined) update.paymentId = paymentId;
   return Order.findByIdAndUpdate(id, update, { new: true });
 }

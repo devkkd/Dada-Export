@@ -29,6 +29,8 @@ const RetailAuthContext = createContext({
   isLoggedIn:       false,
   isLoading:        true,
   localCartSynced:  false,
+  cartCount:        0,
+  refreshCartCount: async () => {},
   logout:           async () => {},
   refreshUser:      async () => {},
 });
@@ -37,6 +39,7 @@ export function RetailAuthProvider({ children }) {
   const [user,           setUser]           = useState(null);
   const [status,         setStatus]         = useState('loading');
   const [localCartSynced, setLocalCartSynced] = useState(false);
+  const [cartCount,       setCartCount]       = useState(0);
 
   // ── Fetch current user from our unified /me endpoint ─────────────────────
   const fetchUser = useCallback(async () => {
@@ -59,6 +62,23 @@ export function RetailAuthProvider({ children }) {
     } catch { /* network error */ }
     setUser(null);
     setStatus('unauthenticated');
+  }, []);
+
+  const refreshCartCount = useCallback(async () => {
+    try {
+      const res = await fetch('/api/retail/cart', { credentials: 'include' });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          const count = (json.data.items || []).reduce((sum, item) => sum + (item.quantity || 0), 0);
+          setCartCount(count);
+          return;
+        }
+      }
+    } catch (e) {
+      console.error('Error refreshing cart count:', e);
+    }
+    setCartCount(0);
   }, []);
 
   const syncLocalCartToServer = useCallback(async () => {
@@ -124,10 +144,18 @@ export function RetailAuthProvider({ children }) {
   }, [fetchUser]);
 
   useEffect(() => {
-    if (status === 'authenticated' && !localCartSynced) {
-      syncLocalCartToServer();
+    if (status === 'authenticated') {
+      refreshCartCount();
+    } else {
+      setCartCount(0);
     }
-  }, [status, localCartSynced, syncLocalCartToServer]);
+  }, [status, refreshCartCount]);
+
+  useEffect(() => {
+    if (status === 'authenticated' && !localCartSynced) {
+      syncLocalCartToServer().then(() => refreshCartCount());
+    }
+  }, [status, localCartSynced, syncLocalCartToServer, refreshCartCount]);
 
   // ── Logout ────────────────────────────────────────────────────────────────
   const logout = async () => {
@@ -142,6 +170,7 @@ export function RetailAuthProvider({ children }) {
     setUser(null);
     setStatus('unauthenticated');
     setLocalCartSynced(false);
+    setCartCount(0);
     try { if (typeof window !== 'undefined') localStorage.removeItem('accountLogin'); } catch (e) { /* ignore */ }
     window.location.href = '/retail';
   };
@@ -151,7 +180,7 @@ export function RetailAuthProvider({ children }) {
 
   return (
     <RetailAuthContext.Provider
-      value={{ user, status, isLoggedIn, isLoading, localCartSynced, logout, refreshUser: fetchUser }}
+      value={{ user, status, isLoggedIn, isLoading, localCartSynced, cartCount, refreshCartCount, logout, refreshUser: fetchUser }}
     >
       {children}
     </RetailAuthContext.Provider>

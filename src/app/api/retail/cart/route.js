@@ -57,6 +57,9 @@ export async function POST(request) {
           size:       item.size,
           color:      item.color,
           quantity:   item.quantity || 1,
+          isCustomized: item.isCustomized || false,
+          customizationFields: item.customizationFields || {},
+          customizationPrice: item.customizationPrice || 0,
         }));
 
       let cart;

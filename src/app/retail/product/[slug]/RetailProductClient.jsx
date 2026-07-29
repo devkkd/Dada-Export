@@ -90,7 +90,7 @@ export default function RetailProductClient({ product, similar = [] }) {
   const [buyNowProduct, setBuyNowProduct] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
 
-  const { isLoggedIn } = useRetailAuth();
+  const { isLoggedIn, refreshCartCount } = useRetailAuth();
   const formattedPrice = product.price ? `₹${product.price.toLocaleString('en-IN')}` : '₹0.00';
   const formattedMRP = product.mrp ? `₹${product.mrp.toLocaleString('en-IN')}` : null;
 
@@ -181,69 +181,70 @@ export default function RetailProductClient({ product, similar = [] }) {
       return;
     }
 
+    if (!isLoggedIn) {
+      document.dispatchEvent(new CustomEvent('openLoginPopup'));
+      setSubmitError('Please login to place a customized order.');
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError('');
 
-    const formattedMessage = `
---- CUSTOMIZATION ORDER REQUEST ---
-Product Name: ${product.name}
-Product URL: ${typeof window !== 'undefined' ? window.location.href : '/retail/product/' + product.slug}
-Base Price: ${formattedPrice}
-Customization Fee: ₹149.00
-Total Amount: ₹${(product.price + 149).toLocaleString('en-IN')}
+    const fields = {
+      height: measurements.height ? `${measurements.height} ${units.height}` : '',
+      bust: measurements.bust ? `${measurements.bust} ${units.bust}` : '',
+      waist: measurements.waist ? `${measurements.waist} ${units.waist}` : '',
+      belly: measurements.belly ? `${measurements.belly} ${units.belly}` : '',
+      hip: measurements.hip ? `${measurements.hip} ${units.hip}` : '',
+      shoulder: measurements.shoulder ? `${measurements.shoulder} ${units.shoulder}` : '',
+      chest: measurements.chest ? `${measurements.chest} ${units.chest}` : '',
+      topLength: measurements.topLength ? `${measurements.topLength} ${units.topLength}` : '',
+      skirtLength: measurements.skirtLength ? `${measurements.skirtLength} ${units.skirtLength}` : '',
+      inseam: measurements.inseam ? `${measurements.inseam} ${units.inseam}` : '',
+      backLength: measurements.backLength ? `${measurements.backLength} ${units.backLength}` : '',
+      fitTop,
+      fitBottom,
+      waistband: waistPreference,
+      neckline: necklinePreference,
+      backStyle: backPreference,
+      fabric: selectedFabricCustom,
+      name: custName,
+      phone: custPhone,
+      email: custEmail,
+      city: custCity,
+      pincode: custPincode,
+      occasion: custOccasion,
+    };
 
-[Selected Standard Attributes]
-Size Selected: ${selectedSize}
-Color Selected: ${selectedColor}
-Custom Fabric Selected: ${selectedFabricCustom}
-
-[Body Measurements]
-- Height: ${measurements.height || 'N/A'} ${units.height}
-- Bust / Breast Size: ${measurements.bust || 'N/A'} ${units.bust}
-- Waist: ${measurements.waist || 'N/A'} ${units.waist}
-- Belly / Tummy Size: ${measurements.belly || 'N/A'} ${units.belly}
-- Hip Size: ${measurements.hip || 'N/A'} ${units.hip}
-
-[Length Measurements]
-- Shoulder Width: ${measurements.shoulder || 'N/A'} ${units.shoulder}
-- Chest Width (Front): ${measurements.chest || 'N/A'} ${units.chest}
-- Top Length / Blouse Length: ${measurements.topLength || 'N/A'} ${units.topLength}
-- Skirt / Dress Length: ${measurements.skirtLength || 'N/A'} ${units.skirtLength}
-- Inseam / Trouser Length: ${measurements.inseam || 'N/A'} ${units.inseam}
-- Back Length: ${measurements.backLength || 'N/A'} ${units.backLength}
-
-[Preferred Fit & Styles]
-- Fit Preference (Top): ${fitTop}
-- Fit Preference (Bottom): ${fitBottom}
-- Waistband Preference: ${waistPreference}
-- Neckline Depth: ${necklinePreference}
-- Back Style Preference: ${backPreference}
-
-[Personal Details & Delivery]
-- Customer Name: ${custName}
-- WhatsApp / Phone: ${custPhone}
-- Email Address: ${custEmail}
-- Delivery Location: ${custCity || 'N/A'}
-- Pincode: ${custPincode || 'N/A'}
-- Occasion / Purpose: ${custOccasion || 'N/A'}
-    `.trim();
+    // Filter out fields that are empty
+    const cleanFields = {};
+    for (const [k, v] of Object.entries(fields)) {
+      if (v && v.trim() !== '') {
+        cleanFields[k] = v;
+      }
+    }
 
     try {
-      const res = await fetch('/api/customer-inquiry', {
+      const res = await fetch('/api/retail/cart', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: custName,
-          email: custEmail.toLowerCase(),
-          phone: custPhone,
-          city: custCity,
-          message: formattedMessage,
-          source: 'retail',
+          productId: product._id,
+          size: 'Custom',
+          color: selectedColor || product.colors?.[0]?.name || 'N/A',
+          quantity: 1,
+          isCustomized: true,
+          customizationPrice: 150,
+          customizationFields: cleanFields,
         }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to submit customization inquiry.');
+      if (!res.ok) throw new Error(data.error || 'Could not add customized item to cart.');
+
+      // Refresh cart count badge in header!
+      if (refreshCartCount) refreshCartCount();
 
       setSubmitSuccess(true);
     } catch (err) {
@@ -855,8 +856,8 @@ Custom Fabric Selected: ${selectedFabricCustom}
                 className="bg-[#281000] hover:bg-[#1a0a00] text-white h-14 px-8 rounded-full font-bold text-sm uppercase tracking-wider flex items-center justify-center transition-all duration-300 w-full md:w-auto shrink-0 shadow-md disabled:opacity-50"
               >
                 {isSubmitting
-                  ? 'Submitting Request...'
-                  : `Pay ₹${(product.price + 149).toLocaleString('en-IN')} & Place Order →`}
+                  ? 'Adding to Cart...'
+                  : `Add Customization to Cart (+ ₹150) →`}
               </button>
             </div>
 
@@ -924,31 +925,33 @@ Custom Fabric Selected: ${selectedFabricCustom}
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h3 className="text-2xl font-bold text-[#281000] mb-3">Customization Request Sent!</h3>
+            <h3 className="text-2xl font-bold text-[#281000] mb-3">Customization Added to Cart!</h3>
             <p className="text-sm text-neutral-700 leading-relaxed mb-6 font-medium">
-              Thank you, <span className="font-extrabold text-[#281000]">{custName}</span>! Your measurements and styling choices for <span className="italic font-bold text-[#281000]">{product.name}</span> have been submitted successfully.
+              Thank you, <span className="font-extrabold text-[#281000]">{custName}</span>! Your measurements and styling choices for <span className="italic font-bold text-[#281000]">{product.name}</span> have been added to your shopping cart.
             </p>
             <div className="bg-[#FFF3E3] border border-[#F2D27A]/30 rounded-2xl p-4 text-left space-y-2.5 mb-6 text-sm">
               <p className="text-neutral-700">
-                <span className="font-extrabold text-amber-900 uppercase text-xs tracking-wider block">WhatsApp Contact:</span> {custPhone}
+                <span className="font-extrabold text-amber-900 uppercase text-xs tracking-wider block">Custom Sizing:</span> Custom Dimensions Saved
               </p>
               <p className="text-neutral-700">
-                <span className="font-extrabold text-amber-900 uppercase text-xs tracking-wider block">Email:</span> {custEmail}
-              </p>
-              <p className="text-neutral-700">
-                <span className="font-extrabold text-amber-900 uppercase text-xs tracking-wider block">Customized Price Quote:</span>
-                <span className="text-lg font-bold text-[#281000]">₹{(product.price + 149).toLocaleString('en-IN')}</span>
-              </p>
-              <p className="text-xs text-neutral-600 mt-3 pt-3 border-t border-stone-200/50 leading-relaxed">
-                Since all customized garments are hand-tailored, our styling specialists will reach out via WhatsApp/Email within 24 hours to confirm your measurements and guide you with the secure payment link.
+                <span className="font-extrabold text-amber-900 uppercase text-xs tracking-wider block">Customization Charge:</span>
+                <span className="text-[#281000] font-bold">₹150.00</span>
               </p>
             </div>
-            <button
-              onClick={() => setSubmitSuccess(false)}
-              className="bg-[#281000] hover:bg-[#1a0a00] text-white px-8 py-3.5 rounded-full text-sm font-bold uppercase tracking-wider transition shadow-md w-full"
-            >
-              Back to Product
-            </button>
+            <div className="flex flex-col gap-3">
+              <Link
+                href="/retail/cart"
+                className="bg-[#281000] hover:bg-[#1a0a00] text-white px-8 py-3.5 rounded-full text-sm font-bold uppercase tracking-wider transition shadow-md w-full block text-center"
+              >
+                Go to Cart & Checkout →
+              </Link>
+              <button
+                onClick={() => setSubmitSuccess(false)}
+                className="border-2 border-[#281000] text-[#281000] px-8 py-3.5 rounded-full text-sm font-bold uppercase tracking-wider transition w-full"
+              >
+                Continue Shopping
+              </button>
+            </div>
           </div>
         </div>
       )}

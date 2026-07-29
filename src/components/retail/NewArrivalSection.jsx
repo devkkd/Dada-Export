@@ -8,11 +8,73 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import { useRetailData } from '@/components/retail/RetailDataContext';
+import { useRetailAuth } from '@/context/RetailAuthContext';
 
 export default function NewArrivalSection() {
   const { newArrivals, categories } = useRetailData();
+  const { isLoggedIn, refreshCartCount } = useRetailAuth();
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedColors, setSelectedColors] = useState({});
+  const [cartSaving, setCartSaving] = useState({});
+
+  const showToast = (message, isSuccess = true) => {
+    if (typeof document === 'undefined') return;
+    const existing = document.getElementById('retail-dynamic-toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'retail-dynamic-toast';
+    toast.className = `fixed bottom-5 right-5 z-[99999] px-6 py-3.5 rounded-full text-white text-xs font-semibold shadow-xl transition-all duration-300 transform translate-y-10 opacity-0 flex items-center gap-2 ${
+      isSuccess ? 'bg-[#281000]' : 'bg-red-600'
+    }`;
+    toast.innerHTML = isSuccess 
+      ? `<span>✓</span> <span>${message}</span>`
+      : `<span>⚠</span> <span>${message}</span>`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.remove('translate-y-10', 'opacity-0'), 50);
+    setTimeout(() => {
+      toast.classList.add('translate-y-10', 'opacity-0');
+      setTimeout(() => toast.remove(), 300);
+    }, 2500);
+  };
+
+  const handleAddToCart = async (e, product) => {
+    e.preventDefault();
+    if (!isLoggedIn) {
+      document.dispatchEvent(new CustomEvent('openLoginPopup'));
+      showToast('Please login to add to cart', false);
+      return;
+    }
+
+    const defaultSize = product.variants?.[0]?.size || 'M';
+    const selectedColor = selectedColors[product._id] || product.colors?.[0]?.name || 'N/A';
+
+    setCartSaving(prev => ({ ...prev, [product._id]: true }));
+    try {
+      const res = await fetch('/api/retail/cart', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: product._id,
+          size: defaultSize,
+          color: selectedColor,
+          quantity: 1,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not add to cart');
+
+      refreshCartCount();
+      showToast('Added to cart successfully!');
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || 'Could not add to cart', false);
+    } finally {
+      setCartSaving(prev => ({ ...prev, [product._id]: false }));
+    }
+  };
 
   const categoryTabs = ['All', ...categories.filter((c) => !c.parentId).map((c) => c.name)];
 
@@ -79,8 +141,12 @@ export default function NewArrivalSection() {
           <h3 className="text-[15px] sm:text-xl font-bold text-black mb-2 line-clamp-1">{product.name}</h3>
          <p className="text-[11px] sm:text-[14px] text-black/70 leading-5 line-clamp-2 sm:line-clamp-3 mb-3 sm:mb-5">{product.description}</p>
          <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3 mt-5">
-  <button onClick={(e) => e.preventDefault()} className="w-full sm:w-auto px-3 sm:px-6 py-2 border border-[#281000] text-[#281000] rounded-full text-[11px] sm:text-sm font-medium hover:bg-[#281000] hover:text-white transition-all">
-    Add to Cart →
+  <button 
+    onClick={(e) => handleAddToCart(e, product)} 
+    disabled={cartSaving[product._id]}
+    className="w-full sm:w-auto px-3 sm:px-6 py-2 border border-[#281000] text-[#281000] rounded-full text-[11px] sm:text-sm font-medium hover:bg-[#281000] hover:text-white transition-all disabled:opacity-50"
+  >
+    {cartSaving[product._id] ? 'Adding...' : 'Add to Cart →'}
   </button>
   {product.colors?.length > 0 && (
     <div className="flex items-center justify-center sm:justify-end gap-3">

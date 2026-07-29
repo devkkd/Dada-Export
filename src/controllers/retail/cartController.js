@@ -7,7 +7,7 @@ export async function getCart(userId) {
   return Cart.findOne({ userId }).lean();
 }
 
-export async function addToCart(userId, { productId, size, color, quantity = 1 }) {
+export async function addToCart(userId, { productId, size, color, quantity = 1, isCustomized = false, customizationFields = {}, customizationPrice = 0 }) {
   await connectDB();
 
   const product = await RetailProduct.findById(productId).lean();
@@ -21,6 +21,9 @@ export async function addToCart(userId, { productId, size, color, quantity = 1 }
     size,
     color,
     quantity,
+    isCustomized,
+    customizationFields,
+    customizationPrice,
   };
 
   let cart = await Cart.findOne({ userId });
@@ -29,12 +32,21 @@ export async function addToCart(userId, { productId, size, color, quantity = 1 }
     return Cart.create({ userId, items: [cartItem] });
   }
 
-  // same product + size + color → increment qty
+  const getCleanFields = (fields) => {
+    if (!fields) return {};
+    if (typeof fields.toJSON === 'function') return fields.toJSON();
+    if (fields instanceof Map) return Object.fromEntries(fields);
+    return fields;
+  };
+
+  // same product + size + color + customization details → increment qty
   const idx = cart.items.findIndex(
     (i) =>
       i.productId.toString() === productId &&
       i.size  === size &&
-      i.color === color
+      i.color === color &&
+      Boolean(i.isCustomized) === Boolean(isCustomized) &&
+      (!isCustomized || JSON.stringify(getCleanFields(i.customizationFields)) === JSON.stringify(getCleanFields(customizationFields)))
   );
 
   if (idx > -1) {

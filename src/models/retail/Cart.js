@@ -8,6 +8,9 @@ const CartItemSchema = new mongoose.Schema({
   size:      String,
   color:     String,
   quantity:  { type: Number, default: 1, min: 1 },
+  isCustomized: { type: Boolean, default: false },
+  customizationFields: { type: Map, of: String },
+  customizationPrice: { type: Number, default: 0 },
 });
 
 const CartSchema = new mongoose.Schema(
@@ -25,7 +28,7 @@ const CartSchema = new mongoose.Schema(
 
 // virtual: total cart value
 CartSchema.virtual('total').get(function () {
-  return this.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  return this.items.reduce((sum, item) => sum + (item.price + (item.customizationPrice || 0)) * item.quantity, 0);
 });
 
 export default mongoose.models.Cart ||
