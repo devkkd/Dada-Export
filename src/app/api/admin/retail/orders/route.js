@@ -19,6 +19,7 @@ export async function GET(request) {
     const orders = await getAllOrders({ status: status === 'all' ? undefined : status });
     return NextResponse.json({ success: true, data: orders });
   } catch (err) {
+    console.error('API admin retail orders GET error:', err);
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

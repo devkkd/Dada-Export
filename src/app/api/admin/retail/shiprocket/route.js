@@ -31,6 +31,14 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
     }
 
+    // Self-healing: Clean up literal string "undefined" if saved previously
+    if (order.shiprocketOrderId === 'undefined') {
+      order.shiprocketOrderId = undefined;
+      order.shiprocketShipmentId = undefined;
+      if (order.trackingId === 'undefined') order.trackingId = undefined;
+      await order.save();
+    }
+
     if (order.shiprocketOrderId) {
       return NextResponse.json({
         success: false,

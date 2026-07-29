@@ -101,14 +101,19 @@ export async function createShiprocketOrder(order, packageDetails) {
     body: JSON.stringify(payload),
   });
 
-  const data = await res.json();
+  const resData = await res.json();
   if (!res.ok) {
-    throw new Error(data.message || 'Failed to create order on Shiprocket');
+    throw new Error(resData.message || 'Failed to create order on Shiprocket');
   }
 
+  const inner = resData.data || {};
+  const orderId = inner.order_id || resData.order_id;
+  const shipmentId = inner.shipment_id || resData.shipment_id;
+  const awbCode = inner.awb_code || resData.awb_code;
+
   return {
-    orderId: String(data.order_id),
-    shipmentId: String(data.shipment_id),
-    awbCode: data.awb_code ? String(data.awb_code) : null,
+    orderId: orderId ? String(orderId) : undefined,
+    shipmentId: shipmentId ? String(shipmentId) : undefined,
+    awbCode: awbCode ? String(awbCode) : null,
   };
 }

@@ -1,5 +1,6 @@
 import { connectDB } from '@/lib/db';
 import Order from '@/models/retail/Order';
+import RetailUser from '@/models/retail/User';
 import { clearCart } from './cartController';
 
 export async function placeOrder(userId, { items, totalAmount, shippingAddress, paymentId, razorpayOrderId, couponCode, discountAmount }) {
