@@ -17,6 +17,20 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const orders = await getAllOrders({ status: status === 'all' ? undefined : status });
+    
+    // Automatically self-heal any database records corrupted with literal "undefined" strings
+    for (const order of orders) {
+      if (order.shiprocketOrderId === 'undefined') {
+        await Order.updateOne(
+          { _id: order._id },
+          { $unset: { shiprocketOrderId: "", shiprocketShipmentId: "", trackingId: "" } }
+        );
+        order.shiprocketOrderId = undefined;
+        order.shiprocketShipmentId = undefined;
+        order.trackingId = undefined;
+      }
+    }
+
     return NextResponse.json({ success: true, data: orders });
   } catch (err) {
     console.error('API admin retail orders GET error:', err);

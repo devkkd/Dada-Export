@@ -12,10 +12,10 @@ function unauthorized() {
 
 // GET /api/admin/categories  — list all (admin only)
 export async function GET(request) {
-  const session = await getServerSession(authOptions);
-  if (!session) return unauthorized();
-
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) return unauthorized();
+
     const categories = await getAllCategories();
     return NextResponse.json({ success: true, data: categories });
   } catch (error) {
@@ -26,10 +26,10 @@ export async function GET(request) {
 
 // POST /api/admin/categories  — create new category
 export async function POST(request) {
-  const session = await getServerSession(authOptions);
-  if (!session) return unauthorized();
-
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) return unauthorized();
+
     const body = await request.json();
 
     // basic validation

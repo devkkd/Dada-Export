@@ -14,10 +14,10 @@ function unauthorized() {
 
 // GET /api/admin/categories/[id]
 export async function GET(request, { params }) {
-  const session = await getServerSession(authOptions);
-  if (!session) return unauthorized();
-
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) return unauthorized();
+
     const { id } = await params;
     const category = await getCategoryById(id);
     if (!category) {
@@ -31,10 +31,10 @@ export async function GET(request, { params }) {
 
 // PUT /api/admin/categories/[id]
 export async function PUT(request, { params }) {
-  const session = await getServerSession(authOptions);
-  if (!session) return unauthorized();
-
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) return unauthorized();
+
     const { id } = await params;
     const body = await request.json();
 
@@ -58,10 +58,10 @@ export async function PUT(request, { params }) {
 
 // DELETE /api/admin/categories/[id]
 export async function DELETE(request, { params }) {
-  const session = await getServerSession(authOptions);
-  if (!session) return unauthorized();
-
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) return unauthorized();
+
     const { id } = await params;
     const category = await getCategoryById(id);
     if (!category) {

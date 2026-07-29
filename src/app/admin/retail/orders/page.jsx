@@ -472,14 +472,14 @@ export default function RetailOrdersPage() {
               <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-sm">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Shiprocket Fulfillment</h4>
-                  {selected.shiprocketOrderId && (
+                  {selected.shiprocketOrderId && selected.shiprocketOrderId !== 'undefined' && (
                     <span className="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-200">
                       Synced
                     </span>
                   )}
                 </div>
 
-                {selected.shiprocketOrderId ? (
+                {selected.shiprocketOrderId && selected.shiprocketOrderId !== 'undefined' ? (
                   <div className="space-y-2 bg-white rounded-xl p-3 border border-gray-100 text-xs">
                     <p className="text-gray-700">
                       <span className="font-semibold text-gray-400">Shiprocket Order ID:</span>{' '}
