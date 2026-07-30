@@ -2,14 +2,14 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useRetailData } from '@/components/retail/RetailDataContext';
 import { useRetailAuth } from '@/context/RetailAuthContext';
 
 const PAGE_SIZE = 16;
 
-export default function RetailSearchPage() {
+function RetailSearchContent() {
   const searchParams = useSearchParams();
   const { allProducts } = useRetailData();
   const { isLoggedIn, refreshCartCount } = useRetailAuth();
@@ -213,5 +213,17 @@ export default function RetailSearchPage() {
         )}
       </div>
     </section>
+  );
+}
+
+export default function RetailSearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full bg-[#FFF7F2] min-h-screen flex items-center justify-center">
+        <p className="text-[#281000] font-medium">Searching…</p>
+      </div>
+    }>
+      <RetailSearchContent />
+    </Suspense>
   );
 }
