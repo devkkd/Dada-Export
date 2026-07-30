@@ -167,7 +167,7 @@ export default function NewArrivalSection() {
 
         {/* See All Button */}
         <div className="flex justify-center mt-14">
-         <Link href="/retail/new-arrival" className="px-10 py-4 bg-[#281000] hover:bg-[#3a1a00] text-white rounded-full text-sm font-medium flex items-center gap-2 transition-colors">
+         <Link href="/retail/new-arrival" className="px-10 py-4 bg-[#281000] hover:bg-[#3a1a00] !text-white rounded-full text-sm font-medium flex items-center gap-2 transition-colors">
   See All New Arrival →
 </Link>
         </div>

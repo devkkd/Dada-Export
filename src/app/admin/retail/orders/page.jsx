@@ -23,8 +23,10 @@ export default function RetailOrdersPage() {
   const [loading, setLoading]       = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch]         = useState('');
-  const [selected, setSelected]     = useState(null); // details drawer
+  const [selected, setSelected]     = useState(null);
   const [updating, setUpdating]     = useState(false);
+  const [page, setPage]             = useState(1);
+  const PAGE_SIZE                   = 20;
   
   const [trackingIdInput, setTrackingIdInput] = useState('');
   const [adminNoteInput, setAdminNoteInput]   = useState('');
@@ -58,6 +60,8 @@ export default function RetailOrdersPage() {
     fetchOrders();
   }, [statusFilter]);
 
+  useEffect(() => { setPage(1); }, [search, statusFilter]);
+
   const filtered = orders.filter((o) => {
     if (!search) return true;
     const q = search.toLowerCase();
@@ -74,6 +78,9 @@ export default function RetailOrdersPage() {
       o.paymentId?.toLowerCase().includes(q)
     );
   });
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const openDrawer = (order) => {
     setSelected(order);
@@ -281,7 +288,7 @@ export default function RetailOrdersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filtered.map((order) => {
+                {paginated.map((order) => {
                   const customer = order.userId || {};
                   return (
                     <tr
@@ -333,6 +340,42 @@ export default function RetailOrdersPage() {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between text-sm">
+          <p className="text-gray-400 text-xs">
+            Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
+          </p>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
+              className="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-medium transition-colors">
+              ← Prev
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+              .reduce((acc, p, idx, arr) => {
+                if (idx > 0 && p - arr[idx - 1] > 1) acc.push('...');
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((p, i) =>
+                p === '...' ? (
+                  <span key={`e-${i}`} className="px-2 text-gray-400">…</span>
+                ) : (
+                  <button key={p} onClick={() => setPage(p)}
+                    className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors ${page === p ? 'bg-[#95565E] text-white' : 'border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+                    {p}
+                  </button>
+                )
+              )}
+            <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+              className="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-medium transition-colors">
+              Next →
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Order Details Drawer */}
       {selected && (

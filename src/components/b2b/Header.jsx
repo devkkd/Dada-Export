@@ -2,28 +2,73 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useB2BData } from '@/components/b2b/B2BDataContext';
 
 export default function Header() {
-  const { categories } = useB2BData();
+  const { categories, allProducts } = useB2BData();
   const router = useRouter();
 
   const [showLogin, setShowLogin] = useState(false);
   const [mobile, setMobile] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('accountLogin') === 'true';
+    }
+    return false;
+  });
   const [openMenu, setOpenMenu] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
+  // Search states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showResults, setShowResults] = useState(false);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const searchRef = useRef(null);
+
   useEffect(() => {
-    const logged = localStorage.getItem('accountLogin');
-    if (logged === 'true') setIsLoggedIn(true);
     const openLogin = () => setShowLogin(true);
     document.addEventListener('openLoginPopup', openLogin);
     return () => document.removeEventListener('openLoginPopup', openLogin);
   }, []);
+
+  // Click outside to close desktop search dropdown
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowResults(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    if (val.trim().length >= 2) {
+      const lower = val.toLowerCase().trim();
+      const filtered = (allProducts || []).filter(p => 
+        p.name?.toLowerCase().includes(lower) || 
+        p.description?.toLowerCase().includes(lower) ||
+        p.sku?.toLowerCase().includes(lower)
+      );
+      setFilteredProducts(filtered);
+      setShowResults(true);
+    } else {
+      setFilteredProducts([]);
+    }
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim().length >= 2) {
+      setShowResults(false);
+      router.push(`/b2b/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   const handleLogin = () => {
     if (mobile === '9999999999') {
@@ -103,16 +148,68 @@ export default function Header() {
           {/* Right Side */}
           <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
             {/* Search Bar desktop */}
-            <div className="hidden lg:flex items-center w-[180px] border-b border-white/70 pb-1">
+            <form onSubmit={handleSearchSubmit} ref={searchRef} className="hidden lg:flex items-center w-[180px] border-b border-white/70 pb-1 relative">
               <input
                 type="text"
                 placeholder="Search"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onFocus={() => setShowResults(true)}
                 className="bg-transparent outline-none text-[14px] text-white placeholder:text-white/80 w-full"
               />
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-white flex-shrink-0 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
+              <button type="submit" aria-label="Search" className="text-white focus:outline-none flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-white cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+
+              {/* Desktop search results dropdown */}
+              {showResults && searchQuery.trim().length >= 2 && (
+                <div className="absolute right-0 top-full mt-2 w-[300px] bg-[#FFFEF9] border border-[#E5D9DD] rounded-[18px] shadow-2xl z-[99999] overflow-hidden text-black text-left">
+                  {filteredProducts.length > 0 ? (
+                    <div>
+                      <div className="max-h-[280px] overflow-y-auto py-2">
+                        {filteredProducts.slice(0, 5).map((product) => (
+                          <Link
+                            key={product._id}
+                            href={`/b2b/product/${product.slug}`}
+                            onClick={() => setShowResults(false)}
+                            className="flex items-center gap-3 px-4 py-2 hover:bg-[#E8DCE0]/50 transition-colors"
+                          >
+                            <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                              <Image
+                                src={product.images?.[0] || '/b2b/home/7.png'}
+                                alt={product.name}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[13px] font-bold text-[#281000] truncate">{product.name}</p>
+                              <p className="text-[11px] text-[#281000]/60 truncate">
+                                {product.sku || 'B2B Product'}
+                              </p>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                      <div className="border-t border-[#E5D9DD] bg-[#F7F3F1] p-2 text-center">
+                        <button
+                          type="submit"
+                          className="text-[12px] font-bold text-[#95565E] hover:underline"
+                        >
+                          View all {filteredProducts.length} results →
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="px-4 py-4 text-center text-sm text-[#281000]/60">
+                      No products found
+                    </div>
+                  )}
+                </div>
+              )}
+            </form>
 
             {/* Mobile Search */}
             <button onClick={() => setMobileSearchOpen(true)} className="lg:hidden text-white">
@@ -150,12 +247,93 @@ export default function Header() {
       {mobileSearchOpen && (
         <div className="fixed top-0 left-0 right-0 z-[99999]">
           <div className="bg-[#95565E] h-[72px] px-4 flex items-center shadow-lg">
-            <div className="flex items-center gap-3 w-full">
-              <input autoFocus type="text" placeholder="Search Products..." className="flex-1 h-10 rounded-full px-4 bg-white text-black text-sm outline-none" />
-              <button onClick={() => setMobileSearchOpen(false)} className="text-white text-3xl leading-none">×</button>
-            </div>
+            <form onSubmit={handleSearchSubmit} className="flex items-center gap-3 w-full relative">
+              <input
+                autoFocus
+                type="text"
+                placeholder="Search Products..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className="flex-1 h-10 rounded-full px-4 bg-white text-black text-sm outline-none"
+              />
+              <button type="submit" className="hidden" />
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileSearchOpen(false);
+                  setSearchQuery('');
+                  setFilteredProducts([]);
+                }}
+                className="text-white text-3xl leading-none"
+              >
+                ×
+              </button>
+            </form>
           </div>
-          <div className="fixed inset-0 top-[72px] bg-black/40" onClick={() => setMobileSearchOpen(false)} />
+          {/* Scrollable results container for mobile search overlay */}
+          {searchQuery.trim().length >= 2 && (
+            <div className="absolute top-[72px] left-0 right-0 max-h-[50vh] overflow-y-auto bg-[#FFFEF9] border-b border-[#E5D9DD] shadow-2xl z-[99998] text-black">
+              {filteredProducts.length > 0 ? (
+                <div>
+                  <div className="py-2">
+                    {filteredProducts.slice(0, 8).map((product) => (
+                      <Link
+                        key={product._id}
+                        href={`/b2b/product/${product.slug}`}
+                        onClick={() => {
+                          setMobileSearchOpen(false);
+                          setSearchQuery('');
+                          setFilteredProducts([]);
+                        }}
+                        className="flex items-center gap-4 px-6 py-3 border-b border-[#E5D9DD]/50 hover:bg-[#E8DCE0]/40 transition-colors"
+                      >
+                        <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                          <Image
+                            src={product.images?.[0] || '/b2b/home/7.png'}
+                            alt={product.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0 text-left">
+                          <p className="text-sm font-bold text-[#281000] truncate">{product.name}</p>
+                          <p className="text-[12px] text-[#281000]/60 truncate">
+                            {product.sku || 'B2B Product'}
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                  <div className="bg-[#F7F3F1] p-3 text-center border-t border-[#E5D9DD]">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        setMobileSearchOpen(false);
+                        handleSearchSubmit(e);
+                        setSearchQuery('');
+                        setFilteredProducts([]);
+                      }}
+                      className="text-sm font-bold text-[#95565E] hover:underline"
+                    >
+                      View all {filteredProducts.length} results →
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="px-6 py-8 text-center text-sm text-[#281000]/60">
+                  No products found
+                </div>
+              )}
+            </div>
+          )}
+          <div
+            className="fixed inset-0 top-[72px] bg-black/40 z-[99997]"
+            onClick={() => {
+              setMobileSearchOpen(false);
+              setSearchQuery('');
+              setFilteredProducts([]);
+            }}
+          />
         </div>
       )}
 

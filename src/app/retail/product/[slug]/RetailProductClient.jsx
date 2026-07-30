@@ -502,7 +502,7 @@ export default function RetailProductClient({ product, similar = [] }) {
                 >
                   + Add To Cart
                 </button>
-                <button
+                {/* <button
                   onClick={() => {
                     setBuyNowProduct({
                       image: images[activeImage] || images[0],
@@ -517,7 +517,7 @@ export default function RetailProductClient({ product, similar = [] }) {
                   className="flex-1 bg-[#F5D8AC] text-[#281000] rounded-full py-4 text-sm font-bold uppercase tracking-wider hover:bg-[#ebd2a0] hover:shadow-md transition-all shrink-0"
                 >
                   Buy Now
-                </button>
+                </button> */}
                 <button
                   onClick={() =>
                     document
