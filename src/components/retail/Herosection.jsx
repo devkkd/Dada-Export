@@ -117,7 +117,7 @@ const [currentImage, setCurrentImage] = useState(0);
 
                         {/* CTA Button */}
                         <Link
-                            href="#collections"
+                            href="/retail/new-arrival"
                             style={{ color: '#ffffff' }}
                             className="inline-block px-5 sm:px-10 py-2.5 sm:py-4 bg-[#281000] hover:bg-[#1E0C00] !text-white font-semibold rounded-full transition-all duration-300 text-[12px] sm:text-base shadow-lg transform hover:scale-105 active:scale-95"
                         >

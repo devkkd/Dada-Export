@@ -28,7 +28,7 @@ export default function CollectionsSection() {
           <h2 className="text-2xl sm:text-4xl font-bold text-center text-black leading-tight">
             Shop Our Collections
           </h2>
-          <Link href="/b2b/categories" style={{ color: '#95565E' }} className="text-xs sm:text-sm font-medium tracking-widest uppercase flex items-center gap-1">
+          <Link href="b2b/new-arrival" style={{ color: '#95565E' }} className="text-xs sm:text-sm font-medium tracking-widest uppercase flex items-center gap-1">
             SEE ALL COLLECTIONS →
           </Link>
         </div>
