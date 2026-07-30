@@ -11,10 +11,8 @@ export default function HeroSection() {
     const [countries, setCountries] = useState(0);
     const [quality, setQuality] = useState(0);
 const heroImages = [
-  '/retail/home/1.png',
-  '/retail/home/1.png',
-  '/retail/home/1.png',
-  '/retail/home/1.png',
+  '/retail/home/ivera.png',
+  '/retail/home/ivera2.png',
 ];
 
 const [currentImage, setCurrentImage] = useState(0);
@@ -75,7 +73,7 @@ const [currentImage, setCurrentImage] = useState(0);
         <>
             <div className="w-full bg-[#FFF7F2] flex flex-col">
                 {/* Hero Image Section */}
-               <div className="relative w-full h-[30vh] sm:h-[40vh] md:h-[40vh] lg:h-[80vh] overflow-hidden">
+               <div className="relative w-full h-[30vh] sm:h-[40vh] md:h-[40vh] lg:h-[90vh] overflow-hidden">
   <Image
   key={currentImage}
   src={heroImages[currentImage]}
@@ -94,28 +92,28 @@ const [currentImage, setCurrentImage] = useState(0);
 />
 
                     {/* Dark Overlay */}
-                    <div className="absolute inset-0 bg-black/30"></div>
+                    {/* <div className="absolute inset-0 bg-black/30"></div> */}
 
                     {/* Hero Content - Centered */}
-                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-5 gap-2 translate-y-0 sm:translate-y-4 md:translate-y-12 lg:translate-y-32">
-                        {/* Badge */}
+                   {/* <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-5 gap-2 translate-y-0 sm:translate-y-4 md:translate-y-12 lg:translate-y-32">
+                        
                         <div >
                         <span className="text-[10px] sm:text-[15px] md:text-xl font-semibold text-white tracking-[1px] uppercase">
                                 B2C  - Retail & Customization
                             </span>
                         </div>
 
-                        {/* Main Heading */}
+                        
                 <h1 className="text-[18px] sm:text-[28px] md:text-4xl lg:text-5xl font-bold text-white leading-tight tracking-tight max-w-[92%] sm:max-w-5xl mb-2 sm:mb-5">
   Elevated Everyday Fashion with Timeless Elegance and Grace made for you
 </h1>
 
-                        {/* Subheading */}
+                     
                       <p className="text-[10px] sm:text-[13px] md:text-[15px] lg:text-[16px] text-white/90 leading-relaxed max-w-[92%] sm:max-w-4xl mb-3 sm:mb-6">
                             And This Is The Meaning = Iveara Creates Refined, Sophisticated Fashion That Feels Elegant And Graceful For Everyday Wear Styles That Stay Beautiful Beyond Trends.
                         </p>
 
-                        {/* CTA Button */}
+                 
                         <Link
                             href="/retail/new-arrival"
                             style={{ color: '#ffffff' }}
@@ -123,7 +121,7 @@ const [currentImage, setCurrentImage] = useState(0);
                         >
                             Shop Collection ↓
                         </Link>
-                    </div>
+                    </div> */}
                 </div>
 
 

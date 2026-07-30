@@ -113,9 +113,9 @@ export default function B2BProductDetail({ product, similar = [] }) {
 
             {/* Price + MOQ */}
             <div className="flex items-baseline gap-4 mb-7">
-              {formattedPrice && (
+              {/* {formattedPrice && (
                 <p className="text-3xl sm:text-4xl font-bold text-[#0E0E0E]">{formattedPrice}</p>
-              )}
+              )} */}
               <p className="text-[#0E0E0E] text-sm font-medium bg-gray-100 px-2.5 py-1 rounded-full">
                 MOQ: {product.moq}
               </p>

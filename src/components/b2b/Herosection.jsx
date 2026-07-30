@@ -11,10 +11,9 @@ export default function HeroSection() {
   const [quality, setQuality] = useState(0);
 
   const heroImages = [
-    '/b2b/home/hero.png',
-    '/b2b/home/hero.png',
-    '/b2b/home/hero.png',
-    '/b2b/home/hero.png',
+    '/b2b/home/hero-1.png',
+    '/b2b/home/hero-2.png',
+    '/b2b/home/hero-3.png',
   ];
 
   const [currentImage, setCurrentImage] = useState(0);
@@ -86,8 +85,7 @@ export default function HeroSection() {
     <>
       <div className="w-full bg-[#FFFEF9] flex flex-col">
         {/* Hero Image Section */}
-        <div className="relative w-full h-[30vh] sm:h-[40vh] md:h-[40vh] lg:h-[80vh] overflow-hidden">
-
+        <div className="relative w-full h-[30vh] sm:h-[40vh] md:h-[40vh] lg:h-[90vh] overflow-hidden">
           <Image
             key={currentImage}
             src={heroImages[currentImage]}
@@ -99,32 +97,32 @@ export default function HeroSection() {
           />
 
           {/* Dark Overlay */}
-          <div className="absolute inset-0 bg-black/30"></div>
+          {/* <div className="absolute inset-0 bg-black/30"></div> */}
 
           {/* Hero Content - Centered */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-5 gap-2 translate-y-2 sm:translate-y-8 md:translate-y-20 lg:translate-y-40">
-            {/* Badge */}
+          {/* <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-5 gap-2 translate-y-2 sm:translate-y-8 md:translate-y-20 lg:translate-y-40">
+           
             <div>
               <span className="text-[10px] sm:text-[15px] md:text-xl font-semibold text-white tracking-[1px] uppercase">
                 B2B - Wholesale & Export
               </span>
             </div>
 
-            {/* Main Heading */}
+        
             <h1 className="text-[18px] sm:text-[28px] md:text-4xl lg:text-5xl font-bold text-white leading-tight tracking-tight max-w-[92%] sm:max-w-4xl mb-2 sm:mb-5">
               Your Trusted Manufacturing Partner
             </h1>
 
-            {/* Subheading */}
+         
             <p className="text-[10px] sm:text-[13px] md:text-[15px] lg:text-[16px] text-white/90 leading-relaxed max-w-[92%] sm:max-w-3xl mb-3 sm:mb-6">
               Custom manufacturing, private label, and export-grade bulk supply - backed by 38 years of Pushkar craftsmanship
             </p>
 
-            {/* CTA Button */}
+            
             <Link href="/b2b/new-arrival" className="inline-block px-5 sm:px-10 py-2.5 sm:py-4 bg-[#95565E] hover:bg-[#874C54] !text-white font-semibold rounded-full transition-all duration-300 text-[12px] sm:text-base shadow-lg transform hover:scale-105 active:scale-95">
               Explore Products ↓
             </Link>
-          </div>
+          </div> */}
         </div>
 
         {/* Animated Marquee Strip */}
