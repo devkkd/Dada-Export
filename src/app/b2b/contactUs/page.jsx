@@ -87,7 +87,7 @@ const ContactPage = () => {
 
             <div>
               <h3 className="text-[#0E0E0E]  text-3sm tracking-widest font-medium  mb-2">Phone / WhatsApp</h3>
-              <p className="text-[#0E0E0E] text-lg">+91 XXXXX XXXXX</p>
+              <p className="text-[#0E0E0E] text-lg">+91 8209934610</p>
               <p className="text-[#0E0E0E] text-lg mt-1">Mon - Sat • 10am - 7pm IST</p>
             </div>
 

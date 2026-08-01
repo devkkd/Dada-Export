@@ -64,8 +64,8 @@ const ManufacturingProcess = () => {
     </h2>
   </div>
 
-  {/* Right Side Description */}
-  <div className="flex-1 lg:pl-12">
+  {/* Right Side Description - hidden on mobile */}
+  <div className="hidden md:block flex-1 lg:pl-12">
     <p className="text-[#0E0E0E] text-[14px] lg:text-[16px] leading-[160%] ">
       Every Dada Exports garment passes through 7 carefully managed stages ensuring export-grade quality at every step.
     </p>
@@ -94,8 +94,8 @@ const ManufacturingProcess = () => {
                 </h3>
               </div>
 
-              {/* Description */}
-              <div className="md:col-span-6">
+              {/* Description - hidden on mobile */}
+              <div className="hidden md:block md:col-span-6">
                 <p className="text-[#0E0E0E] leading-relaxed text-[15px] md:text-base">
                   {step.desc}
                 </p>

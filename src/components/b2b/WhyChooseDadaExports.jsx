@@ -71,8 +71,8 @@ const DadaDifferenceFeatures = () => {
 
                     </div>
                     <div className="h-8"></div>
-                    {/* Description */}
-                    <p className="text-center text-[16px] font-normal leading-[160%] text-[#0E0E0E] max-w-6xl mx-auto lg:whitespace-nowrap">
+                    {/* Description - hidden on mobile */}
+                    <p className="hidden sm:block text-center text-[16px] font-normal leading-[160%] text-[#0E0E0E] max-w-6xl mx-auto lg:whitespace-nowrap">
                         We believe premium quality and honest pricing can coexist. Our 38-year legacy ensures every piece meets international export standards - with the care of a family business behind it.
                     </p>
 
@@ -117,8 +117,8 @@ const DadaDifferenceFeatures = () => {
                                 {feature.title}
                             </h3>
 
-                            {/* Description */}
-                            <p className="text-[12px] sm:text-[14px] leading-6 text-[#0E0E0E]">
+                            {/* Description - hidden on mobile */}
+                            <p className="hidden sm:block text-[12px] sm:text-[14px] leading-6 text-[#0E0E0E]">
                                 {feature.description}
                             </p>
                         </div>

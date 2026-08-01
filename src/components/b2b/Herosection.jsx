@@ -10,10 +10,18 @@ export default function HeroSection() {
   const [countries, setCountries] = useState(0);
   const [quality, setQuality] = useState(0);
 
+  // Desktop images
   const heroImages = [
-    '/b2b/home/hero-1.png',
-    '/b2b/home/hero-2.png',
-    '/b2b/home/hero-3.png',
+    '/b2b/home/hero-4.png',
+    '/b2b/home/hero-5.png',
+    '/b2b/home/hero-6.png',
+  ];
+
+  // Mobile images (change these paths later to your mobile-specific images)
+  const heroImagesMobile = [
+      '/b2b/home/hero-4.png',
+    '/b2b/home/hero-5.png',
+    '/b2b/home/hero-6.png',
   ];
 
   const [currentImage, setCurrentImage] = useState(0);
@@ -85,15 +93,28 @@ export default function HeroSection() {
     <>
       <div className="w-full bg-[#FFFEF9] flex flex-col">
         {/* Hero Image Section */}
-        <div className="relative w-full h-[30vh] sm:h-[40vh] md:h-[40vh] lg:h-[90vh] overflow-hidden">
+        <div className="relative w-full h-[70vh] sm:h-[40vh] md:h-[40vh] lg:h-[70vh] overflow-hidden">
+
+          {/* Mobile Image */}
           <Image
-            key={currentImage}
+            key={`mobile-${currentImage}`}
+            src={heroImagesMobile[currentImage]}
+            alt="Your Trusted Manufacturing Partner"
+            fill
+            priority
+            sizes="100vw"
+            className="block sm:hidden object-cover object-center transition-all duration-700"
+          />
+
+          {/* Desktop Image */}
+          <Image
+            key={`desktop-${currentImage}`}
             src={heroImages[currentImage]}
             alt="Your Trusted Manufacturing Partner"
             fill
             priority
             sizes="100vw"
-            className="object-cover object-center md:object-top transition-all duration-700"
+            className="hidden sm:block object-cover object-center md:object-top transition-all duration-700"
           />
 
           {/* Dark Overlay */}

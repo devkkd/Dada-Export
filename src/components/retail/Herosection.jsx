@@ -10,7 +10,15 @@ export default function HeroSection() {
     const [professionals, setProfessionals] = useState(0);
     const [countries, setCountries] = useState(0);
     const [quality, setQuality] = useState(0);
+
+// Desktop images
 const heroImages = [
+  '/retail/home/ivera.png',
+  '/retail/home/ivera2.png',
+];
+
+// Mobile images (change these paths later to your mobile-specific images)
+const heroImagesMobile = [
   '/retail/home/ivera.png',
   '/retail/home/ivera2.png',
 ];
@@ -73,23 +81,42 @@ const [currentImage, setCurrentImage] = useState(0);
         <>
             <div className="w-full bg-[#FFF7F2] flex flex-col">
                 {/* Hero Image Section */}
-               <div className="relative w-full h-[30vh] sm:h-[40vh] md:h-[40vh] lg:h-[90vh] overflow-hidden">
+               <div className="relative w-full h-[70vh] sm:h-[40vh] md:h-[40vh] lg:h-[70vh] overflow-hidden">
+
+  {/* Mobile Image */}
   <Image
-  key={currentImage}
-  src={heroImages[currentImage]}
-  alt="Your Trusted Manufacturing Partner"
-  fill
-  priority
-  sizes="100vw"
- className="
-  object-cover
-  object-[center_15%]
-  sm:object-cover
-  md:object-top
-  transition-all
-  duration-500
-"
-/>
+    key={`mobile-${currentImage}`}
+    src={heroImagesMobile[currentImage]}
+    alt="Your Trusted Manufacturing Partner"
+    fill
+    priority
+    sizes="100vw"
+    className="
+      block sm:hidden
+      object-cover
+      object-[center_15%]
+      transition-all
+      duration-500
+    "
+  />
+
+  {/* Desktop Image */}
+  <Image
+    key={`desktop-${currentImage}`}
+    src={heroImages[currentImage]}
+    alt="Your Trusted Manufacturing Partner"
+    fill
+    priority
+    sizes="100vw"
+    className="
+      hidden sm:block
+      object-cover
+      sm:object-cover
+      md:object-top
+      transition-all
+      duration-500
+    "
+  />
 
                     {/* Dark Overlay */}
                     {/* <div className="absolute inset-0 bg-black/30"></div> */}

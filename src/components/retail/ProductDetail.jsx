@@ -201,24 +201,84 @@ export default function KasturiSection() {
 
        @media (max-width: 640px) {
   .kasturi-section {
-    padding: 40px 20px;
+    padding: 40px 0;
+  }
+
+  .kasturi-inner {
+    gap: 28px;
   }
 
   .kasturi-image-wrap {
     width: 100%;
     max-width: 100%;
-    min-height: 420px;
+    min-height: 340px;
     border-radius: 12px;
   }
 
+  .kasturi-eyebrow {
+    font-size: 13px;
+    margin-bottom: 12px;
+    letter-spacing: 0.02em;
+  }
+
   .kasturi-headline {
-    font-size: 30px;
+    font-size: 24px;
+    line-height: 1.15;
+    margin-bottom: 16px;
+  }
+
+  .kasturi-body {
+    font-size: 13.5px;
+    line-height: 1.6;
+    margin-bottom: 22px;
+    max-width: 100%;
+  }
+
+  .kasturi-features {
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+
+  .kasturi-features li {
+    font-size: 12.5px;
+    line-height: 1.45;
+  }
+
+  .kasturi-care {
+    font-size: 11.5px;
+    line-height: 1.55;
+    margin-bottom: 24px;
+  }
+
+  .kasturi-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 13px 24px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 400px) {
+  .kasturi-section {
+    padding: 32px 0;
+  }
+
+  .kasturi-image-wrap {
+    min-height: 280px;
+  }
+
+  .kasturi-headline {
+    font-size: 21px;
+  }
+
+  .kasturi-body {
+    font-size: 13px;
   }
 }
       `}</style>
 
       <section className="kasturi-section">
-  <div className="max-w-[1600px] mx-auto px-8 md:px-12 lg:px-20 xl:px-24">
+  <div className="max-w-[1600px] mx-auto px-4 sm:px-8 md:px-12 lg:px-20 xl:px-24">
     <div className="kasturi-inner">
 
           {/* LEFT: Content */}

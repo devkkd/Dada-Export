@@ -355,7 +355,7 @@ export default function HeaderRetail() {
           <div className="px-4 py-1 flex flex-col max-h-[42vh] overflow-y-auto">
             <Link href="/retail/new-arrival" onClick={() => setMobileMenuOpen(false)} className="py-4 border-b border-white/10">New Arrival</Link>
             {navCategories.map((cat) => (
-              <Link key={cat._id} href={`/retail/category/${cat.slug}`} onClick={() => setMobileMenuOpen(false)} className="py-4 border-b border-white/10">
+              <Link key={cat._id} href={`/ivear/category/${cat.slug}`} onClick={() => setMobileMenuOpen(false)} className="py-4 border-b border-white/10">
                 {cat.name}
               </Link>
             ))}

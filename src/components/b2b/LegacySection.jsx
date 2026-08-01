@@ -21,7 +21,8 @@ export default function LegacySection() {
               </h2>
             </div>
 
-            <div className="space-y-4 text-[14px] sm:text-[15.5px] leading-7 text-[#3F2A1E]/90">
+            {/* Paragraphs - hidden on mobile, shown from sm and up */}
+            <div className="hidden sm:block space-y-4 text-[14px] sm:text-[15.5px] leading-7 text-[#3F2A1E]/90">
               <p>
                 Since 1985, Shri Ramnivas Rankawat began stitching from home in Pushkar, Rajasthan - laying the 
                 foundation of what would become a garment legacy. In 1992, Rankawat Tailor Shop was established, 
@@ -34,35 +35,35 @@ export default function LegacySection() {
             </div>
 
             {/* Timeline */}
-            <div className="space-y-4 pt-2">
+            <div className="space-y-3 sm:space-y-4 pt-1 sm:pt-2">
              <div className="flex gap-3 sm:gap-6 items-stretch">
-  <div className="w-14 sm:w-20 flex-shrink-0 pt-1">
-    <span className="text-xl sm:text-3xl font-bold text-black">1985</span>
+  <div className="w-12 sm:w-20 flex-shrink-0 pt-1">
+    <span className="text-lg sm:text-3xl font-bold text-black">1985</span>
   </div>
 
   <div className="w-px self-stretch bg-[#D8D0D0]"></div>
 
-  <p className="flex-1 text-[13px] sm:text-[15px] text-[#0E0E0E]/80 leading-6">
+  <p className="flex-1 text-[12px] sm:text-[15px] text-[#0E0E0E]/80 leading-5 sm:leading-6">
                   Shri Ramnivas Rankawat begins stitching from home in Pushkar, Rajasthan
                 </p>
               </div>
 
              <div className="flex gap-3 sm:gap-6 items-stretch">
-               <div className="w-14 sm:w-20 flex-shrink-0">
-                 <span className="text-xl sm:text-3xl font-bold text-black">1992</span>
+               <div className="w-12 sm:w-20 flex-shrink-0">
+                 <span className="text-lg sm:text-3xl font-bold text-black">1992</span>
                 </div>
-                <div className="w-px h-14 bg-[#D8D0D0]"></div>
-              <p className="text-[13px] sm:text-[15px] text-[#0E0E0E]/80 leading-6">
+                <div className="w-px h-12 sm:h-14 bg-[#D8D0D0]"></div>
+              <p className="flex-1 text-[12px] sm:text-[15px] text-[#0E0E0E]/80 leading-5 sm:leading-6">
                   Rankawat Tailor Shop established - a trusted institution in Pushkar&apos;s garment industry
                 </p>
               </div>
 
              <div className="flex gap-3 sm:gap-6 items-stretch">
-              <div className="w-14 sm:w-20 flex-shrink-0">
-                 <span className="text-xl sm:text-3xl font-bold text-black">2023</span>
+              <div className="w-12 sm:w-20 flex-shrink-0">
+                 <span className="text-lg sm:text-3xl font-bold text-black">2023</span>
                 </div>
-                <div className="w-px h-14 bg-[#D8D0D0]"></div>
-               <p className="text-[13px] sm:text-[15px] text-[#0E0E0E]/80 leading-6">
+                <div className="w-px h-12 sm:h-14 bg-[#D8D0D0]"></div>
+               <p className="flex-1 text-[12px] sm:text-[15px] text-[#0E0E0E]/80 leading-5 sm:leading-6">
                   Dada Exports launched - export-quality fashion direct to buyers across India and the world
                 </p>
               </div>
@@ -71,18 +72,19 @@ export default function LegacySection() {
             {/* Button */}
             <Link
               href="/about"
-             className="inline-block mt-4 sm:mt-6 px-6 sm:px-8 py-3 bg-[#95565E] hover:bg-[#8A4F57] text-white rounded-full text-sm font-medium transition-all duration-300 hover:scale-105"
+             className="inline-block mt-3 sm:mt-6 px-5 sm:px-8 py-2.5 sm:py-3 bg-[#95565E] hover:bg-[#8A4F57] text-white rounded-full text-xs sm:text-sm font-medium transition-all duration-300 hover:scale-105"
             >
               See Full Our Legacy →
             </Link>
           </div>
 
           {/* Right Image */}
-          <div className="relative overflow-hidden rounded-[24px] shadow-2xl h-[260px] sm:h-[420px] lg:h-[620px]">
+          <div className="relative overflow-hidden rounded-[16px] sm:rounded-[24px] shadow-2xl h-[220px] sm:h-[420px] lg:h-[620px]">
             <Image
               src="/b2b/home/6.png"
               alt="Dada Exports Store Interior"
               fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
               className="object-cover transition-transform duration-700 hover:scale-105"
               priority
             />

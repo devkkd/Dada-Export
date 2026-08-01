@@ -87,11 +87,11 @@ export default function NewArrivalSection() {
 
   return (
     <section className="w-full bg-[#FFF7F2]">
-      <div className="max-w-[1600px] mx-auto px-8 md:px-12 lg:px-20 xl:px-24 pt-12 pb-20">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 md:px-12 lg:px-20 xl:px-24 pt-8 sm:pt-12 pb-10 sm:pb-20">
 
         {/* Header */}
-        <div className="mb-12">
-          <h2 className="text-center text-3xl md:text-4xl font-medium text-[#281000]">
+        <div className="mb-6 sm:mb-12">
+          <h2 className="text-center text-2xl sm:text-3xl md:text-4xl font-medium text-[#281000]">
             {cat?.name || 'Tops'}
           </h2>
         </div>
@@ -155,9 +155,9 @@ export default function NewArrivalSection() {
         </div>
 
         {cat && (
-          <div className="flex justify-center mt-10">
+          <div className="flex justify-center mt-6 sm:mt-10">
             <Link href={`/retail/category/${cat.slug}`}
-              className="px-8 py-3 bg-[#281000] hover:bg-[#3a1a00] text-white rounded-full text-sm font-medium transition-colors">
+              className="px-6 sm:px-8 py-2.5 sm:py-3 bg-[#281000] hover:bg-[#3a1a00] text-white rounded-full text-[12px] sm:text-sm font-medium transition-colors">
               View All {cat.name} →
             </Link>
           </div>

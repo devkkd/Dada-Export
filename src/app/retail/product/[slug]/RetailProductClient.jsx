@@ -126,11 +126,11 @@ export default function RetailProductClient({ product, similar = [] }) {
 
   const fabricSwatches = [
     { name: 'Cotton', img: '/retail/newArrivals/7.png' },
-    { name: 'Rayon', img: '/retail/newArrivals/8.png' },
-    { name: 'Banarasi Brocade', img: '/retail/newArrivals/9.png' },
-    { name: 'Keshia Silk', img: '/retail/newArrivals/10.png' },
-    { name: 'Denim', img: '/retail/newArrivals/11.png' },
-    { name: 'Georgette', img: '/retail/newArrivals/12.png' },
+    { name: 'Rayon', img: '/retail/newArrivals/25.png' },
+    { name: 'Banarasi Brocade', img: '/retail/newArrivals/21.png' },
+    { name: 'Keshia Silk', img: '/retail/newArrivals/22.png' },
+    { name: 'Denim', img: '/retail/newArrivals/23.png' },
+    { name: 'Georgette', img: '/retail/newArrivals/24.png' },
   ];
 
   const handleAddToCart = async () => {
@@ -321,7 +321,7 @@ export default function RetailProductClient({ product, similar = [] }) {
 
   return (
     <>
-      <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-8 md:py-12 bg-[#FFF7F2]">
+      <div className="mx-auto px-4 md:px-8 py-8 md:py-12 bg-[#FFF7F2]">
         {toastMessage && (
           <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-[#281000] text-white px-6 py-3 rounded-full text-sm font-medium shadow-lg transition-all animate-bounce">
             {toastMessage}
