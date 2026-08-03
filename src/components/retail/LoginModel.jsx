@@ -282,12 +282,12 @@ export default function LoginModal({ isOpen, onClose }) {
                   </button>
                 </form>
 
-                <p className="text-[11px] text-gray-300 mt-5 text-center leading-relaxed">
+                {/* <p className="text-[11px] text-gray-300 mt-5 text-center leading-relaxed">
                   By continuing, you agree to our{' '}
                   <a href="/retail/terms"   className="underline text-gray-400 hover:text-[#281000]">Terms</a>
                   {' '}&amp;{' '}
                   <a href="/retail/privacy" className="underline text-gray-400 hover:text-[#281000]">Privacy Policy</a>
-                </p>
+                </p> */}
               </>
             )}
 
