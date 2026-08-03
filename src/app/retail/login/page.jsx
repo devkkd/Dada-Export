@@ -181,7 +181,7 @@ function LoginContent() {
             {step === STEP.EMAIL && (
               <>
                 {/* Google */}
-                <button
+                {/* <button
                   onClick={handleGoogle}
                   disabled={googleBusy || busy}
                   className="w-full h-12 flex items-center justify-center gap-3 border border-gray-200 hover:border-[#281000] rounded-2xl text-sm font-medium text-[#281000] transition-all disabled:opacity-50 mb-5"
@@ -190,7 +190,7 @@ function LoginContent() {
                     ? <div className="w-4 h-4 border-2 border-[#281000] border-t-transparent rounded-full animate-spin" />
                     : <><GoogleIcon />Continue with Google</>
                   }
-                </button>
+                </button> */}
 
                 <div className="flex items-center gap-3 mb-5">
                   <div className="flex-1 h-px bg-gray-100" />

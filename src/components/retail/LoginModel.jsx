@@ -239,7 +239,7 @@ export default function LoginModal({ isOpen, onClose }) {
             {step === STEP.EMAIL && (
               <>
                 {/* Google */}
-                <button
+                {/* <button
                   onClick={handleGoogle}
                   disabled={googleBusy || busy}
                   className="w-full h-11 flex items-center justify-center gap-2.5 border border-gray-200 hover:border-[#281000] rounded-2xl text-sm font-medium text-[#281000] transition-all disabled:opacity-50 mb-4"
@@ -248,13 +248,13 @@ export default function LoginModal({ isOpen, onClose }) {
                     ? <div className="w-4 h-4 border-2 border-[#281000] border-t-transparent rounded-full animate-spin" />
                     : <><GoogleIcon /> Continue with Google</>
                   }
-                </button>
+                </button> */}
 
-                <div className="flex items-center gap-3 mb-4">
+                {/* <div className="flex items-center gap-3 mb-4">
                   <div className="flex-1 h-px bg-gray-100" />
                   <span className="text-xs text-gray-400">or use email</span>
                   <div className="flex-1 h-px bg-gray-100" />
-                </div>
+                </div> */}
 
                 <form onSubmit={handleSendOtp} noValidate>
                   <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">

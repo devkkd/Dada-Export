@@ -85,6 +85,9 @@ export const retailAuthOptions = {
   // ── Adapter (required for EmailProvider magic links) ──────────────────────
   adapter: RetailMongoAdapter(),
 
+  // Tell NextAuth to use /api/retail/auth as the base path instead of /api/auth
+  basePath: '/api/retail/auth',
+
   providers: [
     // ── Google OAuth ────────────────────────────────────────────────────────
     GoogleProvider({

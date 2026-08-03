@@ -27,14 +27,16 @@ export default function RetailProductClient({ product, similar = [] }) {
       { name: 'Purple', hex: '#6B21A8' },
     ];
 
-  const fabrics = ['Cotton', 'Rayon', 'Banarasi Brocade', 'Keshia Silk', 'Denim', 'Georgette'];
+  const fabrics = product.fabric
+    ? [product.fabric]
+    : ['Cotton', 'Rayon', 'Banarasi Brocade', 'Keshia Silk', 'Denim', 'Georgette'];
 
   const [activeImage, setActiveImage] = useState(0);
   const [selectedPrint, setSelectedPrint] = useState(prints[0] || '');
   const [selectedSize, setSelectedSize] = useState(sizes[0] || '');
   const [selectedColor, setSelectedColor] = useState(colors[0]?.name || '');
   const [quantity, setQuantity] = useState(1);
-  const [selectedFabricCustom, setSelectedFabricCustom] = useState('Rayon');
+  const [selectedFabricCustom, setSelectedFabricCustom] = useState(product.fabric || 'Rayon');
 
   // Personal details
   const [custName, setCustName] = useState('');
