@@ -64,7 +64,7 @@ const ContactPage = () => {
           </h1>
           
           <p className="text-[#0E0E0E] text-xl font-medium mb-4">
-            Contact Dada Exports – B2B Enquiries, Wholesale &amp; Retail | Pushkar, India
+            Contact Iveara – Product Enquiries, Wholesale &amp; Retail | Pushkar, India
           </p>
           
           <p className="text-[#0E0E0E] max-w-4xl mx-auto text-[16px] leading-relaxed">
@@ -85,15 +85,15 @@ const ContactPage = () => {
               </p>
             </div>
 
-            <div>
+            {/* <div>
               <h3 className="text-[#0E0E0E]  text-3sm tracking-widest font-medium  mb-2">Phone / WhatsApp</h3>
               <p className="text-[#0E0E0E] text-lg">+91 8209934610</p>
               <p className="text-[#0E0E0E] text-lg mt-1">Mon - Sat • 10am - 7pm IST</p>
-            </div>
+            </div> */}
 
             <div>
               <h3 className="text-[#0E0E0E]  text-3sm tracking-widest font-medium  mb-2">Email</h3>
-              <p className="text-[#0E0E0E] text-lg">info@dadaexports.com</p>
+              <p className="text-[#0E0E0E] text-lg">iveara-support@dadaexports.com</p>
               <p className="text-[#0E0E0E] text-lg mt-1">Response within 24 hours</p>
             </div>
 
@@ -151,6 +151,7 @@ const ContactPage = () => {
       <option value="Retailer">Retailer</option>
       <option value="Boutique">Boutique</option>
       <option value="Exporter">Exporter</option>
+      <option value="Help">Help</option>
     </select>
 
     {/* Custom Arrow */}

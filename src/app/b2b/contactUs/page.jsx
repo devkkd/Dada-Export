@@ -93,7 +93,7 @@ const ContactPage = () => {
 
             <div>
               <h3 className="text-[#0E0E0E]  text-3sm tracking-widest font-medium  mb-2">Email</h3>
-              <p className="text-[#0E0E0E] text-lg">info@dadaexports.com</p>
+              <p className="text-[#0E0E0E] text-lg">dadaexports01@gmail.com</p>
               <p className="text-[#0E0E0E] text-lg mt-1">Response within 24 hours</p>
             </div>
 

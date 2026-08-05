@@ -46,15 +46,20 @@ export async function POST(req) {
     // OTP valid — delete it (single use)
     await EmailOTP.deleteOne({ _id: record._id });
 
-    // Upsert user — create on first login, find on returning
-    const user = await RetailUser.findOneAndUpdate(
-      { email: normalised },
-      {
-        $setOnInsert: { email: normalised, providers: ['email-otp'] },
-        $addToSet:    { providers: 'email-otp' },
-      },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
+    // Upsert user — create on first login, update on returning
+    // Use two-step approach to avoid ConflictingUpdateOperators on 'providers'
+    let user = await RetailUser.findOne({ email: normalised });
+    if (!user) {
+      user = await RetailUser.create({
+        email:     normalised,
+        providers: ['email-otp'],
+      });
+    } else if (!user.providers?.includes('email-otp')) {
+      await RetailUser.updateOne(
+        { _id: user._id },
+        { $addToSet: { providers: 'email-otp' } }
+      );
+    }
 
     // Sign JWT
     const token = await signRetailToken({

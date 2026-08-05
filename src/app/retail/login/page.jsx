@@ -242,9 +242,10 @@ function LoginContent() {
                         key={i}
                         ref={(el) => { otpRefs.current[i] = el; }}
                         type="text" inputMode="numeric" pattern="\d*" maxLength={1} value={digit}
+                        autoComplete="one-time-code"
                         onChange={(e) => handleOtpChange(i, e.target.value)}
                         onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                        className={`flex-1 aspect-square text-center text-2xl font-bold border-2 rounded-xl outline-none transition-all
+                        className={`w-10 h-12 text-center text-2xl font-bold border-2 rounded-xl outline-none transition-all
                           ${digit ? 'border-[#281000] bg-[#281000]/5 text-[#281000]' : 'border-gray-200 text-[#281000]'}
                           focus:border-[#281000]`}
                       />

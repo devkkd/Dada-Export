@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useRouter }                    from 'next/navigation';
-import { useRetailAuth }                from '@/context/RetailAuthContext';
-import { signIn }                       from 'next-auth/react';
-import Image                            from 'next/image';
+import { useRouter }                   from 'next/navigation';
+import { useRetailAuth }               from '@/context/RetailAuthContext';
+import Image                           from 'next/image';
 
 const STEP = { EMAIL: 'email', OTP: 'otp', DONE: 'done' };
 
@@ -20,9 +19,10 @@ export default function LoginModal({ isOpen, onClose }) {
   const [error,      setError]      = useState('');
   const [countdown,  setCountdown]  = useState(0);
 
-  const otpRefs = useRef([]);
+  const otpRefs     = useRef([]);
+  const verifyingRef = useRef(false); // prevent double-submit on auto-verify
 
-  // Reset state every time modal opens
+  // ── Reset on open ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (isOpen) {
       setStep(STEP.EMAIL);
@@ -32,17 +32,18 @@ export default function LoginModal({ isOpen, onClose }) {
       setBusy(false);
       setGoogleBusy(false);
       setCountdown(0);
+      verifyingRef.current = false;
     }
   }, [isOpen]);
 
-  // Countdown for resend
+  // ── Countdown ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (countdown <= 0) return;
     const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(t);
   }, [countdown]);
 
-  // Close on Escape key
+  // ── Escape to close ───────────────────────────────────────────────────────
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e) => { if (e.key === 'Escape') onClose(); };
@@ -50,17 +51,29 @@ export default function LoginModal({ isOpen, onClose }) {
     return () => document.removeEventListener('keydown', handler);
   }, [isOpen, onClose]);
 
-  // Auto-submit when all 6 digits entered — must be before any early return
+  // ── Auto-submit when 6 digits entered ─────────────────────────────────────
   useEffect(() => {
-    if (step === STEP.OTP && otp.join('').length === 6) handleVerifyOtp();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (step === STEP.OTP && otp.join('').length === 6 && !verifyingRef.current) {
+      doVerifyOtp(otp.join(''));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [otp, step]);
 
   if (!isOpen) return null;
 
-  // ── Send email OTP ────────────────────────────────────────────────────────
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  const getLoginCallback = () => {
+    if (typeof window === 'undefined') return '/retail/account';
+    return sessionStorage.getItem('retailLoginCallback') || '/retail/account';
+  };
+  const clearLoginCallback = () => {
+    if (typeof window !== 'undefined') sessionStorage.removeItem('retailLoginCallback');
+  };
+
+  // ── Send OTP ──────────────────────────────────────────────────────────────
   const handleSendOtp = async (e) => {
     e?.preventDefault();
+    if (busy) return;
     setError('');
     const trimmed = email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
@@ -70,17 +83,64 @@ export default function LoginModal({ isOpen, onClose }) {
     setBusy(true);
     try {
       const res  = await fetch('/api/retail/auth/send-email-otp', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: trimmed }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.message || 'Failed to send code.'); return; }
       setStep(STEP.OTP);
       setOtp(['', '', '', '', '', '']);
+      verifyingRef.current = false;
       setCountdown(60);
       setTimeout(() => otpRefs.current[0]?.focus(), 100);
-    } catch { setError('Network error. Please try again.'); }
-    finally   { setBusy(false); }
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // ── Verify OTP (internal — called both by form submit and auto-submit) ────
+  const doVerifyOtp = async (otpStr) => {
+    if (verifyingRef.current) return;
+    if (otpStr.length < 6) { setError('Please enter the 6-digit code.'); return; }
+    verifyingRef.current = true;
+    setError('');
+    setBusy(true);
+    try {
+      const res  = await fetch('/api/retail/auth/verify-email-otp', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), otp: otpStr }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || 'Incorrect code.');
+        verifyingRef.current = false;
+        return;
+      }
+      setStep(STEP.DONE);
+      await refreshUser();
+      setTimeout(() => {
+        try { localStorage.setItem('accountLogin', 'true'); } catch (_) {}
+        const callback = getLoginCallback();
+        clearLoginCallback();
+        onClose();
+        router.push(callback);
+      }, 900);
+    } catch {
+      setError('Network error. Please try again.');
+      verifyingRef.current = false;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleVerifyOtp = (e) => {
+    e?.preventDefault();
+    doVerifyOtp(otp.join(''));
   };
 
   // ── OTP input handlers ────────────────────────────────────────────────────
@@ -102,64 +162,20 @@ export default function LoginModal({ isOpen, onClose }) {
     const p = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
     if (!p) return;
     const n = ['', '', '', '', '', ''];
-    p.split('').forEach((d, i) => { n[i] = d; });
+    p.split('').forEach((d, idx) => { n[idx] = d; });
     setOtp(n);
     otpRefs.current[Math.min(p.length, 5)]?.focus();
   };
 
-  const getLoginCallback = () => {
-    if (typeof window === 'undefined') return '/retail/account';
-    const callback = sessionStorage.getItem('retailLoginCallback');
-    return callback || '/retail/account';
-  };
-
-  const clearLoginCallback = () => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('retailLoginCallback');
-    }
-  };
-
-  // ── Verify OTP ────────────────────────────────────────────────────────────
-  const handleVerifyOtp = async (e) => {
-    e?.preventDefault();
-    setError('');
-    const otpStr = otp.join('');
-    if (otpStr.length < 6) { setError('Please enter the 6-digit code.'); return; }
-    setBusy(true);
-    try {
-      const res  = await fetch('/api/retail/auth/verify-email-otp', {
-        method: 'POST', credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim().toLowerCase(), otp: otpStr }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(data.message || 'Incorrect code.'); return; }
-      setStep(STEP.DONE);
-      await refreshUser();
-      setTimeout(() => {
-        try { if (typeof window !== 'undefined') localStorage.setItem('accountLogin', 'true'); } catch (e) { /* ignore */ }
-        const callback = getLoginCallback();
-        clearLoginCallback();
-        onClose();
-        router.push(callback);
-      }, 900);
-    } catch { setError('Network error. Please try again.'); }
-    finally   { setBusy(false); }
-  };
-
   // ── Google OAuth ──────────────────────────────────────────────────────────
-  const handleGoogle = async () => {
+  const handleGoogle = () => {
     setError(''); setGoogleBusy(true);
-    try {
-      const callback = getLoginCallback();
-      const cb = typeof window !== 'undefined' ? window.location.origin + callback : '/retail/account';
-      await signIn('google', { callbackUrl: cb, redirect: true });
-    } catch {
-      setError('Could not start Google sign-in.');
-      setGoogleBusy(false);
-    }
+    const callback = getLoginCallback();
+    const params = new URLSearchParams({ callbackUrl: callback });
+    window.location.href = `/api/retail/auth/signin/google?${params.toString()}`;
   };
 
+  // ─────────────────────────────────────────────────────────────────────────
   return (
     <div
       className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
@@ -168,10 +184,10 @@ export default function LoginModal({ isOpen, onClose }) {
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
-      {/* Modal */}
+      {/* Modal card */}
       <div className="relative w-full max-w-[400px] bg-white rounded-3xl shadow-2xl overflow-hidden">
 
-        {/* Close button */}
+        {/* Close */}
         <button
           onClick={onClose}
           className="absolute top-4 right-5 text-2xl text-gray-300 hover:text-gray-600 transition-colors z-10 leading-none"
@@ -180,8 +196,8 @@ export default function LoginModal({ isOpen, onClose }) {
           ×
         </button>
 
+        {/* ── Header ─────────────────────────────────────────────────────── */}
         <div className="px-8 pt-8 pb-2">
-          {/* Logo */}
           <div className="flex justify-center mb-6">
             <Image src="/retail/Union.png" alt="ivara" width={70} height={35} className="object-contain" />
           </div>
@@ -196,7 +212,7 @@ export default function LoginModal({ isOpen, onClose }) {
           {step === STEP.OTP && (
             <>
               <button
-                onClick={() => { setStep(STEP.EMAIL); setError(''); setOtp(['','','','','','']); }}
+                onClick={() => { setStep(STEP.EMAIL); setError(''); setOtp(['','','','','','']); verifyingRef.current = false; }}
                 className="flex items-center gap-1 text-sm text-gray-400 hover:text-[#281000] mb-4 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -218,14 +234,16 @@ export default function LoginModal({ isOpen, onClose }) {
                 </svg>
               </div>
               <p className="text-[16px] font-semibold text-green-600">Signed in successfully</p>
-              <p className="text-gray-400 text-sm mt-1">Redirecting to your account…</p>
+              <p className="text-gray-400 text-sm mt-1">Redirecting…</p>
             </div>
           )}
         </div>
 
+        {/* ── Body ───────────────────────────────────────────────────────── */}
         {step !== STEP.DONE && (
           <div className="px-8 pb-8">
-            {/* Error */}
+
+            {/* Error banner */}
             {error && (
               <div className="mb-4 bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600 flex items-start gap-2">
                 <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -235,11 +253,12 @@ export default function LoginModal({ isOpen, onClose }) {
               </div>
             )}
 
-            {/* ── EMAIL STEP ── */}
+            {/* ── EMAIL step ── */}
             {step === STEP.EMAIL && (
               <>
-                {/* Google */}
+                {/* Google button */}
                 {/* <button
+                  type="button"
                   onClick={handleGoogle}
                   disabled={googleBusy || busy}
                   className="w-full h-11 flex items-center justify-center gap-2.5 border border-gray-200 hover:border-[#281000] rounded-2xl text-sm font-medium text-[#281000] transition-all disabled:opacity-50 mb-4"
@@ -248,9 +267,9 @@ export default function LoginModal({ isOpen, onClose }) {
                     ? <div className="w-4 h-4 border-2 border-[#281000] border-t-transparent rounded-full animate-spin" />
                     : <><GoogleIcon /> Continue with Google</>
                   }
-                </button> */}
+                </button>
 
-                {/* <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-3 mb-4">
                   <div className="flex-1 h-px bg-gray-100" />
                   <span className="text-xs text-gray-400">or use email</span>
                   <div className="flex-1 h-px bg-gray-100" />
@@ -261,7 +280,8 @@ export default function LoginModal({ isOpen, onClose }) {
                     Email address
                   </label>
                   <input
-                    type="email" value={email}
+                    type="email"
+                    value={email}
                     onChange={(e) => { setEmail(e.target.value); setError(''); }}
                     placeholder="you@example.com"
                     autoComplete="email"
@@ -269,7 +289,8 @@ export default function LoginModal({ isOpen, onClose }) {
                     className="w-full h-11 border border-gray-200 focus:border-[#281000] rounded-2xl px-4 outline-none text-[#281000] placeholder:text-gray-300 text-sm transition-colors"
                   />
                   <button
-                    type="submit" disabled={busy || !email.trim()}
+                    type="submit"
+                    disabled={busy || !email.trim()}
                     className="w-full mt-3 h-11 bg-[#281000] hover:bg-black text-white rounded-2xl text-sm font-semibold transition-all disabled:opacity-50"
                   >
                     {busy
@@ -282,35 +303,45 @@ export default function LoginModal({ isOpen, onClose }) {
                   </button>
                 </form>
 
-                {/* <p className="text-[11px] text-gray-300 mt-5 text-center leading-relaxed">
+                <p className="text-[11px] text-gray-300 mt-5 text-center leading-relaxed">
                   By continuing, you agree to our{' '}
-                  <a href="/retail/terms"   className="underline text-gray-400 hover:text-[#281000]">Terms</a>
+                  <a href="/retail/terms" className="underline text-gray-400 hover:text-[#281000]">Terms</a>
                   {' '}&amp;{' '}
                   <a href="/retail/privacy" className="underline text-gray-400 hover:text-[#281000]">Privacy Policy</a>
-                </p> */}
+                </p>
               </>
             )}
 
-            {/* ── OTP STEP ── */}
+            {/* ── OTP step ── */}
             {step === STEP.OTP && (
               <>
                 <form onSubmit={handleVerifyOtp} noValidate>
+                  {/* 6 individual digit boxes */}
                   <div className="flex gap-2 mb-5" onPaste={handleOtpPaste}>
                     {otp.map((digit, i) => (
                       <input
                         key={i}
                         ref={(el) => { otpRefs.current[i] = el; }}
-                        type="text" inputMode="numeric" pattern="\d*" maxLength={1} value={digit}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="\d*"
+                        maxLength={1}
+                        value={digit}
+                        autoComplete="one-time-code"
                         onChange={(e) => handleOtpChange(i, e.target.value)}
                         onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                        className={`flex-1 aspect-square text-center text-xl font-bold border-2 rounded-xl outline-none transition-all
-                          ${digit ? 'border-[#281000] bg-[#281000]/5 text-[#281000]' : 'border-gray-200 text-[#281000]'}
+                        className={`w-10 h-12 text-center text-xl font-bold border-2 rounded-xl outline-none transition-all
+                          ${digit
+                            ? 'border-[#281000] bg-[#281000]/5 text-[#281000]'
+                            : 'border-gray-200 text-[#281000]'}
                           focus:border-[#281000]`}
                       />
                     ))}
                   </div>
+
                   <button
-                    type="submit" disabled={busy || otp.join('').length < 6}
+                    type="submit"
+                    disabled={busy || otp.join('').length < 6}
                     className="w-full h-11 bg-[#281000] hover:bg-black text-white rounded-2xl text-sm font-semibold transition-all disabled:opacity-50"
                   >
                     {busy
@@ -325,9 +356,16 @@ export default function LoginModal({ isOpen, onClose }) {
 
                 <div className="mt-4 text-center">
                   {countdown > 0 ? (
-                    <p className="text-sm text-gray-400">Resend in <span className="font-semibold text-[#281000]">{countdown}s</span></p>
+                    <p className="text-sm text-gray-400">
+                      Resend in <span className="font-semibold text-[#281000]">{countdown}s</span>
+                    </p>
                   ) : (
-                    <button onClick={handleSendOtp} disabled={busy} className="text-sm text-[#281000] underline hover:text-black disabled:opacity-50">
+                    <button
+                      type="button"
+                      onClick={handleSendOtp}
+                      disabled={busy}
+                      className="text-sm text-[#281000] underline hover:text-black disabled:opacity-50"
+                    >
                       Resend code
                     </button>
                   )}
