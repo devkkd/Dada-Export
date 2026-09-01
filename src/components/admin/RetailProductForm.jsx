@@ -344,7 +344,7 @@ export default function RetailProductForm({ product }) {
       </Section>
 
       {/* Size & Stock */}
-      <Section title="Sizes & Stock">
+      <Section title=" Free Size">
         <div className="space-y-2">
           {variants.map((v, i) => (
             <div key={i} className="flex items-center gap-3">
