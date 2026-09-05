@@ -4,7 +4,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
-const DEFAULT_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+const DEFAULT_SIZES = ['Free Size', 'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+
+// "Free Size" variant is special: it stores custom labels as separate variants
+// e.g. admin adds "36", "38-40" → variants = [{size:'Free Size',stock:0},{size:'36',stock:10},{size:'38-40',stock:5}]
+const FREE_SIZE = 'Free Size';
 
 const EMPTY_FORM = {
   name:            '',
@@ -61,6 +65,9 @@ export default function RetailProductForm({ product }) {
       : DEFAULT_SIZES.map((size) => ({ size, stock: 0 }))
   );
 
+  // Custom size input (shown when Free Size variant is active)
+  const [customSizeInput, setCustomSizeInput] = useState('');
+
   const [prints, setPrints]   = useState(product?.prints || []);
   const [printInput, setPrintInput] = useState('');
 
@@ -106,6 +113,37 @@ export default function RetailProductForm({ product }) {
       name: val,
       slug: val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
     }));
+  };
+
+  // Toggle a default size in/out of variants list
+  const toggleVariantSize = (size) => {
+    setVariants((prev) => {
+      const exists = prev.find((v) => v.size === size);
+      if (exists) {
+        // Remove this size AND all its custom children if it's Free Size
+        if (size === FREE_SIZE) {
+          return prev.filter((v) => DEFAULT_SIZES.includes(v.size) ? v.size !== FREE_SIZE : false);
+        }
+        return prev.filter((v) => v.size !== size);
+      } else {
+        return [...prev, { size, stock: 0 }];
+      }
+    });
+  };
+
+  // Add a custom size label (child of Free Size)
+  const addCustomVariant = () => {
+    const val = customSizeInput.trim();
+    if (!val) return;
+    // Don't duplicate
+    if (variants.find((v) => v.size === val)) { setCustomSizeInput(''); return; }
+    setVariants((prev) => [...prev, { size: val, stock: 0 }]);
+    setCustomSizeInput('');
+  };
+
+  // Remove a custom size variant
+  const removeCustomVariant = (size) => {
+    setVariants((prev) => prev.filter((v) => v.size !== size));
   };
 
   const handleImageSelect = (e) => {
@@ -344,18 +382,127 @@ export default function RetailProductForm({ product }) {
       </Section>
 
       {/* Size & Stock */}
-      <Section title=" Free Size">
-        <div className="space-y-2">
-          {variants.map((v, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <span className="w-16 text-sm font-medium text-gray-600 shrink-0">{v.size}</span>
-              <input type="number" min="0" value={v.stock}
-                onChange={(e) => { const n = [...variants]; n[i] = { ...n[i], stock: e.target.value }; setVariants(n); }}
-                placeholder="Stock qty" className={`${inp} w-32`} />
-              <span className="text-xs text-gray-400">units</span>
-            </div>
-          ))}
+      <Section title="Size & Stock">
+        {/* Toggle buttons for default sizes */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {DEFAULT_SIZES.map((size) => {
+            const active = variants.some((v) => v.size === size);
+            return (
+              <button
+                key={size}
+                type="button"
+                onClick={() => toggleVariantSize(size)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                  active
+                    ? 'bg-[#95565E] border-[#95565E] text-white'
+                    : 'border-gray-200 text-gray-600 hover:border-[#95565E]'
+                }`}
+              >
+                {size}
+              </button>
+            );
+          })}
         </div>
+
+        {/* Stock inputs for active default sizes */}
+        {variants.filter((v) => DEFAULT_SIZES.includes(v.size)).length > 0 && (
+          <div className="space-y-2 mb-4">
+            {variants
+              .filter((v) => DEFAULT_SIZES.includes(v.size))
+              .map((v, _) => {
+                const globalIdx = variants.findIndex((x) => x.size === v.size);
+                return (
+                  <div key={v.size} className="flex items-center gap-3">
+                    <span className="w-20 text-sm font-medium text-gray-600 shrink-0">{v.size}</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={v.stock}
+                      onChange={(e) => {
+                        const n = [...variants];
+                        n[globalIdx] = { ...n[globalIdx], stock: e.target.value };
+                        setVariants(n);
+                      }}
+                      placeholder="Stock qty"
+                      className={`${inp} w-32`}
+                    />
+                    <span className="text-xs text-gray-400">units</span>
+                  </div>
+                );
+              })}
+          </div>
+        )}
+
+        {/* Free Size custom labels — shown only when Free Size is toggled on */}
+        {variants.some((v) => v.size === FREE_SIZE) && (
+          <div className="mt-2 pt-4 border-t border-gray-100">
+            <p className="text-xs font-medium text-gray-600 mb-2">
+              Custom Size Labels for Free Size
+              <span className="ml-1 text-gray-400 font-normal">(optional — add specific labels like "36", "38-40", "S/M")</span>
+            </p>
+
+            {/* Custom variant rows with stock */}
+            {variants.filter((v) => !DEFAULT_SIZES.includes(v.size)).length > 0 && (
+              <div className="space-y-2 mb-3">
+                {variants
+                  .filter((v) => !DEFAULT_SIZES.includes(v.size))
+                  .map((v) => {
+                    const globalIdx = variants.findIndex((x) => x.size === v.size);
+                    return (
+                      <div key={v.size} className="flex items-center gap-3">
+                        <span className="flex items-center gap-1.5 bg-[#95565E]/10 text-[#95565E] text-sm px-3 py-1 rounded-full border border-[#95565E]/20 w-28 shrink-0 justify-between">
+                          <span className="truncate">{v.size}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeCustomVariant(v.size)}
+                            className="text-[#95565E]/60 hover:text-[#95565E] transition-colors leading-none shrink-0"
+                          >
+                            ×
+                          </button>
+                        </span>
+                        <input
+                          type="number"
+                          min="0"
+                          value={v.stock}
+                          onChange={(e) => {
+                            const n = [...variants];
+                            n[globalIdx] = { ...n[globalIdx], stock: e.target.value };
+                            setVariants(n);
+                          }}
+                          placeholder="Stock qty"
+                          className={`${inp} w-32`}
+                        />
+                        <span className="text-xs text-gray-400">units</span>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+
+            {/* Add custom size input */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={customSizeInput}
+                onChange={(e) => setCustomSizeInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCustomVariant(); } }}
+                placeholder="e.g. 36, 38-40, S/M, One Size"
+                className={`${inp} flex-1`}
+              />
+              <button
+                type="button"
+                onClick={addCustomVariant}
+                disabled={!customSizeInput.trim()}
+                className="px-4 py-2.5 rounded-xl bg-[#95565E] hover:bg-[#7f4750] text-white text-sm font-medium transition-colors disabled:opacity-40 whitespace-nowrap"
+              >
+                + Add
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 mt-2">
+              Leave empty to use "Free Size" label only, or add specific measurement labels.
+            </p>
+          </div>
+        )}
       </Section>
 
       {/* Prints */}

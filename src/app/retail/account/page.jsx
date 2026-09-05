@@ -57,6 +57,22 @@ function AccountContent() {
   const [showAddrForm,  setShowAddrForm]  = useState(false);
   const [mapError,      setMapError]      = useState('');
   const [expandedOrders, setExpandedOrders] = useState({});
+  const [cancelModal,   setCancelModal]   = useState(null); // { orderId, orderNum }
+  const [cancelReason,  setCancelReason]  = useState('');
+  const [cancelling,    setCancelling]    = useState(false);
+  const [trackingData,  setTrackingData]  = useState({}); // { [orderId]: trackingInfo }
+  const [trackingLoading, setTrackingLoading] = useState({}); // { [orderId]: bool }
+
+  // Return / Exchange state
+  const [returnModal,   setReturnModal]   = useState(null); // { order }
+  const [returnType,    setReturnType]    = useState('return'); // 'return' | 'exchange'
+  const [returnReason,  setReturnReason]  = useState('');
+  const [returnDetail,  setReturnDetail]  = useState('');
+  const [exchangeFor,   setExchangeFor]   = useState('');
+  const [submittingReturn, setSubmittingReturn] = useState(false);
+  const [returnRequests, setReturnRequests] = useState({}); // { [orderId]: request }
+
+  const RETURN_WINDOW_DAYS = 7;
 
   const toggleOrderExpand = (orderId) => {
     setExpandedOrders((prev) => ({ ...prev, [orderId]: !prev[orderId] }));
@@ -87,6 +103,7 @@ function AccountContent() {
     if (isLoggedIn) {
       fetchAddresses();
       fetchOrders();
+      fetchReturnRequests();
     }
   }, [isLoggedIn, tab]); // eslint-disable-line
 
@@ -111,6 +128,100 @@ function AccountContent() {
       const data = await res.json();
       if (data.success) setOrders(data.orders || []);
     } finally { setOrdersLoading(false); }
+  };
+
+  const openCancelModal = (order) => {
+    setCancelModal({ orderId: order._id, orderNum: order._id.slice(-8).toUpperCase() });
+    setCancelReason('');
+  };
+
+  const confirmCancel = async () => {
+    if (!cancelModal) return;
+    setCancelling(true);
+    try {
+      const res  = await fetch(`/api/retail/orders/${cancelModal.orderId}/cancel`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: cancelReason || 'Cancelled by customer' }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Cancel failed');
+      // Update local state immediately
+      setOrders((prev) =>
+        prev.map((o) => o._id === cancelModal.orderId ? { ...o, orderStatus: 'cancelled' } : o)
+      );
+      setCancelModal(null);
+    } catch (err) {
+      alert(err.message);
+    } finally { setCancelling(false); }
+  };
+
+  const fetchTracking = async (orderId) => {
+    setTrackingLoading((prev) => ({ ...prev, [orderId]: true }));
+    try {
+      const res  = await fetch(`/api/retail/orders/${orderId}/track`, { credentials: 'include' });
+      const data = await res.json();
+      setTrackingData((prev) => ({ ...prev, [orderId]: data }));
+    } catch (err) {
+      setTrackingData((prev) => ({ ...prev, [orderId]: { success: false, error: err.message } }));
+    } finally {
+      setTrackingLoading((prev) => ({ ...prev, [orderId]: false }));
+    }
+  };
+
+  // Fetch all return requests once, map by orderId
+  const fetchReturnRequests = async () => {
+    try {
+      const res  = await fetch('/api/retail/returns', { credentials: 'include' });
+      const data = await res.json();
+      if (data.success) {
+        const map = {};
+        (data.data || []).forEach((r) => {
+          const oid = r.orderId?._id?.toString() || r.orderId?.toString();
+          if (oid) map[oid] = r;
+        });
+        setReturnRequests(map);
+      }
+    } catch (_) {}
+  };
+
+  const openReturnModal = (order) => {
+    setReturnModal({ order });
+    setReturnType('return');
+    setReturnReason('');
+    setReturnDetail('');
+    setExchangeFor('');
+  };
+
+  const submitReturnRequest = async () => {
+    if (!returnModal || !returnReason) return;
+    setSubmittingReturn(true);
+    try {
+      const res  = await fetch('/api/retail/returns', {
+        method:      'POST',
+        credentials: 'include',
+        headers:     { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId:      returnModal.order._id,
+          type:         returnType,
+          items:        returnModal.order.items,
+          reason:       returnReason,
+          reasonDetail: returnDetail,
+          exchangeFor:  exchangeFor,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Submission failed');
+      // Cache result so button shows "Requested" state
+      const oid = returnModal.order._id;
+      setReturnRequests((prev) => ({ ...prev, [oid]: data.data }));
+      setReturnModal(null);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setSubmittingReturn(false);
+    }
   };
 
   const saveAddress = async () => {
@@ -358,6 +469,18 @@ function AccountContent() {
 
   // ── ORDERS tab ────────────────────────────────────────────────────────────
   if (tab === TABS.ORDERS) {
+
+    // Shiprocket status → our step index
+    const TRACK_STEPS = ['Order Placed', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered'];
+    const statusToStep = (orderStatus, srStatus) => {
+      const s = (srStatus || orderStatus || '').toLowerCase();
+      if (s.includes('deliver')) return 4;
+      if (s.includes('out for delivery') || s.includes('out_for_delivery')) return 3;
+      if (s.includes('ship') || s.includes('transit') || s.includes('picked')) return 2;
+      if (s.includes('process') || s.includes('manifest')) return 1;
+      return 0;
+    };
+
     return (
       <div className="bg-[#F7F4EF] min-h-screen">
         <div className="max-w-[900px] mx-auto px-5 md:px-8 pt-12 pb-24">
@@ -386,149 +509,523 @@ function AccountContent() {
             </p>
           ) : (
             <div className="space-y-4">
-              {orders.map((order) => (
-                <div key={order._id} className="bg-white rounded-2xl border border-[#1a0a00]/8 overflow-hidden shadow-sm">
-                  <div className="px-5 py-4 flex flex-wrap items-center justify-between gap-3 border-b border-[#1a0a00]/6 bg-[#FCFAF7]">
-                    <div>
-                      <p className="text-[11px] font-mono text-[#95565E] font-semibold mb-0.5 tracking-wide">
-                        Order #{order._id.slice(-8).toUpperCase()}
-                      </p>
-                      <p className="text-[11px] text-[#1a0a00]/40">
-                        {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold text-[#1a0a00]">
-                        ₹{order.totalAmount?.toLocaleString('en-IN')}
-                      </span>
-                      <span className={`text-xs font-semibold px-3 py-1 rounded-full capitalize ${ORDER_COLOURS[order.orderStatus] || 'bg-gray-100 text-gray-600'}`}>
-                        {order.orderStatus}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Items list always shown in order card */}
-                  <div className="px-5 py-3 divide-y divide-[#1a0a00]/5">
-                    {order.items?.map((item, i) => (
-                      <div key={i} className="flex flex-col py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="relative h-[80px] w-[80px] flex-shrink-0 overflow-hidden rounded-2xl border border-[#E8DED8] bg-[#F7F4EF]">
-                            <Image
-                              src={item.image || '/retail/home/7.png'}
-                              alt={item.name || 'Product'}
-                              fill
-                              unoptimized
-                              className="object-cover"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-[#1a0a00] flex items-center gap-1.5 flex-wrap">
-                              <span>{item.name}</span>
-                              {item.isCustomized && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                  Customized
-                                </span>
-                              )}
-                            </p>
-                            <p className="text-xs text-[#1a0a00]/40 mt-0.5">
-                              {[item.size, item.color].filter(Boolean).join(' · ')} · Qty {item.quantity}
-                            </p>
-                          </div>
-                          <p className="text-sm text-[#1a0a00] font-medium shrink-0">
-                            ₹{((item.price + (item.customizationPrice || 0)) * item.quantity).toLocaleString('en-IN')}
-                          </p>
-                        </div>
+              {orders.map((order) => {
+                const canCancel = ['placed', 'processing'].includes(order.orderStatus);
+                const canTrack  = order.trackingId && !['cancelled'].includes(order.orderStatus);
 
-                        {item.isCustomized && item.customizationFields && (
-                          <div className="mt-2 ml-[92px] text-[11px] bg-[#FCFAF7] rounded-xl p-3 border border-[#1a0a00]/5 text-[#1a0a00]/70 space-y-1">
-                            <span className="font-bold text-[9px] uppercase tracking-wider text-amber-800 block mb-0.5">Your Custom Sizing:</span>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-0.5">
-                              {Object.entries(
-                                typeof item.customizationFields.toJSON === 'function' ? item.customizationFields.toJSON() :
-                                (item.customizationFields instanceof Map ? Object.fromEntries(item.customizationFields) : item.customizationFields)
-                              ).map(([key, val]) => (
-                                <p key={key} className="truncate">
-                                  <span className="capitalize text-neutral-400 font-semibold">{key.replace(/([A-Z])/g, ' $1')}:</span> <strong className="text-[#1a0a00]/70 font-semibold">{val || 'N/A'}</strong>
-                                </p>
-                              ))}
-                            </div>
-                          </div>
+                // Return window: only delivered orders within 7 days
+                const isDelivered = order.orderStatus === 'delivered';
+                const daysSinceUpdate = (Date.now() - new Date(order.updatedAt || order.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+                const withinReturnWindow = daysSinceUpdate <= RETURN_WINDOW_DAYS;
+                const existingReturn = returnRequests[order._id];
+                const canReturn = isDelivered && withinReturnWindow && !existingReturn;
+                const tData     = trackingData[order._id];
+                const tLoading  = trackingLoading[order._id];
+                const currentStep = tData?.tracked
+                  ? statusToStep(order.orderStatus, tData.currentStatus)
+                  : statusToStep(order.orderStatus);
+
+                return (
+                  <div key={order._id} className="bg-white rounded-2xl border border-[#1a0a00]/8 overflow-hidden shadow-sm">
+                    {/* Order header */}
+                    <div className="px-5 py-4 flex flex-wrap items-center justify-between gap-3 border-b border-[#1a0a00]/6 bg-[#FCFAF7]">
+                      <div>
+                        <p className="text-[11px] font-mono text-[#95565E] font-semibold mb-0.5 tracking-wide">
+                          Order #{order._id.slice(-8).toUpperCase()}
+                        </p>
+                        <p className="text-[11px] text-[#1a0a00]/40">
+                          {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="text-sm font-semibold text-[#1a0a00]">
+                          ₹{order.totalAmount?.toLocaleString('en-IN')}
+                        </span>
+                        <span className={`text-xs font-semibold px-3 py-1 rounded-full capitalize ${ORDER_COLOURS[order.orderStatus] || 'bg-gray-100 text-gray-600'}`}>
+                          {order.orderStatus}
+                        </span>
+                        {/* Track button */}
+                        {canTrack && (
+                          <button
+                            onClick={() => {
+                              toggleOrderExpand(order._id);
+                              if (!tData) fetchTracking(order._id);
+                            }}
+                            className="text-[10px] font-bold tracking-widest px-3 py-1.5 rounded-full border border-indigo-300 text-indigo-600 hover:bg-indigo-50 transition-colors flex items-center gap-1"
+                          >
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                            </svg>
+                            TRACK
+                          </button>
+                        )}
+                        {/* Cancel button */}
+                        {canCancel && (
+                          <button
+                            onClick={() => openCancelModal(order)}
+                            className="text-[10px] font-bold tracking-widest px-3 py-1.5 rounded-full border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
+                          >
+                            CANCEL
+                          </button>
+                        )}
+                        {/* Return / Exchange button */}
+                        {canReturn && (
+                          <button
+                            onClick={() => openReturnModal(order)}
+                            className="text-[10px] font-bold tracking-widest px-3 py-1.5 rounded-full border border-amber-300 text-amber-700 hover:bg-amber-50 transition-colors"
+                          >
+                            RETURN / EXCHANGE
+                          </button>
+                        )}
+                        {/* Existing return badge */}
+                        {existingReturn && (
+                          <span className={`text-[10px] font-bold tracking-widest px-3 py-1.5 rounded-full border ${
+                            existingReturn.status === 'pending'   ? 'bg-yellow-50 border-yellow-200 text-yellow-700' :
+                            existingReturn.status === 'approved'  ? 'bg-green-50  border-green-200  text-green-700'  :
+                            existingReturn.status === 'rejected'  ? 'bg-red-50    border-red-200    text-red-600'    :
+                            existingReturn.status === 'refunded'  ? 'bg-blue-50   border-blue-200   text-blue-700'   :
+                            'bg-gray-50 border-gray-200 text-gray-600'
+                          }`}>
+                            {existingReturn.type?.toUpperCase()} {existingReturn.status?.toUpperCase()}
+                          </span>
                         )}
                       </div>
-                    ))}
-                  </div>
+                    </div>
 
-                  {/* Expandable Order Details Section */}
-                  {expandedOrders[order._id] && (
-                    <div className="px-5 py-5 bg-[#FAF8F5] border-t border-[#1a0a00]/5 text-xs text-[#1a0a00]/80 space-y-5">
-                      <div className="grid sm:grid-cols-2 gap-6">
-                        {/* Shipping Address */}
-                        <div className="bg-white p-4 rounded-xl border border-[#1a0a00]/5 shadow-2xs">
-                          <h4 className="font-bold uppercase tracking-wider text-[#1a0a00]/40 text-[10px] mb-2.5">Shipping Address</h4>
-                          <p className="font-semibold text-[#1a0a00] mb-1">{order.shippingAddress?.name || 'Recipients Name'}</p>
-                          <p className="leading-5 text-[#1a0a00]/70">{order.shippingAddress?.street}</p>
-                          <p className="leading-5 text-[#1a0a00]/70">{order.shippingAddress?.city}, {order.shippingAddress?.state} - {order.shippingAddress?.pincode}</p>
-                          {order.shippingAddress?.phone && <p className="mt-2 text-[11px] text-[#1a0a00]/60">Contact: {order.shippingAddress?.phone}</p>}
+                    {/* Items list */}
+                    <div className="px-5 py-3 divide-y divide-[#1a0a00]/5">
+                      {order.items?.map((item, i) => (
+                        <div key={i} className="flex flex-col py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="relative h-[80px] w-[80px] flex-shrink-0 overflow-hidden rounded-2xl border border-[#E8DED8] bg-[#F7F4EF]">
+                              <Image
+                                src={item.image || '/retail/home/7.png'}
+                                alt={item.name || 'Product'}
+                                fill
+                                unoptimized
+                                className="object-cover"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-[#1a0a00] flex items-center gap-1.5 flex-wrap">
+                                <span>{item.name}</span>
+                                {item.isCustomized && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                    Customized
+                                  </span>
+                                )}
+                              </p>
+                              <p className="text-xs text-[#1a0a00]/40 mt-0.5">
+                                {[item.size, item.color].filter(Boolean).join(' · ')} · Qty {item.quantity}
+                              </p>
+                            </div>
+                            <p className="text-sm text-[#1a0a00] font-medium shrink-0">
+                              ₹{((item.price + (item.customizationPrice || 0)) * item.quantity).toLocaleString('en-IN')}
+                            </p>
+                          </div>
+                          {item.isCustomized && item.customizationFields && (
+                            <div className="mt-2 ml-[92px] text-[11px] bg-[#FCFAF7] rounded-xl p-3 border border-[#1a0a00]/5 text-[#1a0a00]/70 space-y-1">
+                              <span className="font-bold text-[9px] uppercase tracking-wider text-amber-800 block mb-0.5">Your Custom Sizing:</span>
+                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-0.5">
+                                {Object.entries(
+                                  typeof item.customizationFields.toJSON === 'function' ? item.customizationFields.toJSON() :
+                                  (item.customizationFields instanceof Map ? Object.fromEntries(item.customizationFields) : item.customizationFields)
+                                ).map(([key, val]) => (
+                                  <p key={key} className="truncate">
+                                    <span className="capitalize text-neutral-400 font-semibold">{key.replace(/([A-Z])/g, ' $1')}:</span>{' '}
+                                    <strong className="text-[#1a0a00]/70 font-semibold">{val || 'N/A'}</strong>
+                                  </p>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
+                      ))}
+                    </div>
 
-                        {/* Payment & Tracking Info */}
-                        <div className="space-y-4">
+                    {/* Expandable details + tracking */}
+                    {expandedOrders[order._id] && (
+                      <div className="px-5 py-5 bg-[#FAF8F5] border-t border-[#1a0a00]/5 space-y-5">
+
+                        {/* Live Tracking stepper */}
+                        {order.orderStatus !== 'cancelled' && (
+                          <div className="bg-white rounded-2xl border border-[#1a0a00]/5 p-4">
+                            <h4 className="font-bold uppercase tracking-wider text-[#1a0a00]/40 text-[10px] mb-4">Order Progress</h4>
+
+                            {/* Step progress bar */}
+                            <div className="flex items-center gap-0 mb-4 overflow-x-auto pb-1">
+                              {TRACK_STEPS.map((step, idx) => (
+                                <div key={step} className="flex items-center flex-1 min-w-0">
+                                  <div className="flex flex-col items-center flex-shrink-0">
+                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center border-2 transition-all ${
+                                      idx <= currentStep
+                                        ? 'bg-[#281000] border-[#281000] text-white'
+                                        : 'bg-white border-gray-200 text-gray-300'
+                                    }`}>
+                                      {idx < currentStep ? (
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                      ) : (
+                                        <span className="text-[9px] font-bold">{idx + 1}</span>
+                                      )}
+                                    </div>
+                                    <span className={`mt-1.5 text-[9px] font-semibold text-center leading-tight max-w-[56px] ${
+                                      idx <= currentStep ? 'text-[#281000]' : 'text-gray-300'
+                                    }`}>
+                                      {step}
+                                    </span>
+                                  </div>
+                                  {idx < TRACK_STEPS.length - 1 && (
+                                    <div className={`flex-1 h-0.5 mx-1 -mt-5 transition-all ${
+                                      idx < currentStep ? 'bg-[#281000]' : 'bg-gray-200'
+                                    }`} />
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Shiprocket live data */}
+                            {canTrack && (
+                              <>
+                                {tLoading && (
+                                  <div className="flex items-center gap-2 text-[11px] text-[#1a0a00]/50 py-2">
+                                    <span className="w-3 h-3 border border-[#281000]/30 border-t-[#281000] rounded-full animate-spin" />
+                                    Fetching live tracking…
+                                  </div>
+                                )}
+                                {tData && !tLoading && (
+                                  <>
+                                    {tData.success && tData.tracked ? (
+                                      <div className="space-y-2">
+                                        <div className="flex flex-wrap gap-3 text-[11px] text-[#1a0a00]/60 mb-2">
+                                          {tData.courierName && <span>Courier: <strong className="text-[#1a0a00]">{tData.courierName}</strong></span>}
+                                          {tData.etd && <span>Est. Delivery: <strong className="text-[#1a0a00]">{tData.etd}</strong></span>}
+                                          {tData.trackUrl && (
+                                            <a href={tData.trackUrl} target="_blank" rel="noreferrer"
+                                              className="text-indigo-600 underline font-semibold">
+                                              Track on courier site →
+                                            </a>
+                                          )}
+                                        </div>
+                                        {tData.activities?.length > 0 && (
+                                          <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                                            {tData.activities.slice(0, 8).map((act, ai) => (
+                                              <div key={ai} className="flex gap-3 text-[11px]">
+                                                <span className="text-[#1a0a00]/30 whitespace-nowrap shrink-0">{act.date}</span>
+                                                <span className="text-[#1a0a00]/70">{act.description || act.activity}</span>
+                                                {act.location && <span className="text-[#1a0a00]/40 shrink-0">{act.location}</span>}
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
+                                    ) : tData.success && !tData.tracked ? (
+                                      <p className="text-[11px] text-[#1a0a00]/40 italic">{tData.message}</p>
+                                    ) : (
+                                      <div className="flex items-center gap-2">
+                                        <p className="text-[11px] text-red-500">Could not fetch tracking. <button onClick={() => fetchTracking(order._id)} className="underline">Retry</button></p>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                                {!tData && !tLoading && (
+                                  <button
+                                    onClick={() => fetchTracking(order._id)}
+                                    className="text-[11px] text-indigo-600 underline font-semibold"
+                                  >
+                                    Load live tracking details
+                                  </button>
+                                )}
+                              </>
+                            )}
+
+                            {order.trackingId && (
+                              <p className="mt-2 text-[11px] text-[#1a0a00]/50">
+                                AWB: <span className="font-mono bg-gray-50 px-1.5 py-0.5 border border-gray-100 rounded select-all text-gray-700">{order.trackingId}</span>
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Cancelled reason */}
+                        {order.orderStatus === 'cancelled' && order.cancelReason && (
+                          <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-[12px] text-red-700">
+                            <span className="font-semibold">Cancellation reason: </span>{order.cancelReason}
+                          </div>
+                        )}
+
+                        {/* Return / Exchange request details */}
+                        {existingReturn && (
+                          <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-[12px] space-y-1.5">
+                            <p className="text-[11px] font-bold uppercase tracking-wider text-amber-800 mb-2">
+                              {existingReturn.type === 'exchange' ? '🔄 Exchange Request' : '↩ Return Request'}
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <span className="text-amber-700/70">Status:</span>
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                existingReturn.status === 'pending'   ? 'bg-yellow-50 border-yellow-300 text-yellow-700' :
+                                existingReturn.status === 'approved'  ? 'bg-green-50  border-green-300  text-green-700'  :
+                                existingReturn.status === 'rejected'  ? 'bg-red-50    border-red-300    text-red-600'    :
+                                existingReturn.status === 'refunded'  ? 'bg-blue-50   border-blue-300   text-blue-700'   :
+                                existingReturn.status === 'picked_up' ? 'bg-purple-50 border-purple-300 text-purple-700' :
+                                'bg-gray-50 border-gray-200 text-gray-600'
+                              }`}>
+                                {existingReturn.status?.replace('_', ' ').toUpperCase()}
+                              </span>
+                            </div>
+                            <p><span className="text-amber-700/70">Reason: </span><strong>{existingReturn.reason}</strong></p>
+                            {existingReturn.reasonDetail && <p className="text-amber-700/70">{existingReturn.reasonDetail}</p>}
+                            {existingReturn.exchangeFor && <p><span className="text-amber-700/70">Exchange for: </span><strong>{existingReturn.exchangeFor}</strong></p>}
+                            {existingReturn.adminNote && (
+                              <div className="mt-2 p-2 bg-white rounded-lg border border-amber-200 text-amber-900">
+                                <span className="font-semibold block text-[10px] uppercase tracking-wide mb-0.5">Response from Dada-Exports:</span>
+                                {existingReturn.adminNote}
+                              </div>
+                            )}
+                            {existingReturn.refundAmount && (
+                              <p className="text-green-700 font-semibold">
+                                Refund: ₹{existingReturn.refundAmount.toLocaleString('en-IN')}
+                                {existingReturn.refundId && <span className="text-[10px] font-mono ml-2 text-gray-500">({existingReturn.refundId})</span>}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="grid sm:grid-cols-2 gap-4 text-xs text-[#1a0a00]/80">
+                          {/* Shipping */}
+                          <div className="bg-white p-4 rounded-xl border border-[#1a0a00]/5 shadow-2xs">
+                            <h4 className="font-bold uppercase tracking-wider text-[#1a0a00]/40 text-[10px] mb-2.5">Shipping Address</h4>
+                            <p className="font-semibold text-[#1a0a00] mb-1">{order.shippingAddress?.name}</p>
+                            <p className="leading-5 text-[#1a0a00]/70">{order.shippingAddress?.street}</p>
+                            <p className="leading-5 text-[#1a0a00]/70">{order.shippingAddress?.city}, {order.shippingAddress?.state} - {order.shippingAddress?.pincode}</p>
+                            {order.shippingAddress?.phone && <p className="mt-2 text-[11px] text-[#1a0a00]/60">Contact: {order.shippingAddress.phone}</p>}
+                          </div>
+
+                          {/* Payment */}
                           <div className="bg-white p-4 rounded-xl border border-[#1a0a00]/5 shadow-2xs">
                             <h4 className="font-bold uppercase tracking-wider text-[#1a0a00]/40 text-[10px] mb-2.5">Payment Details</h4>
                             <div className="flex items-center gap-2 mb-1.5">
                               <span className="text-[#1a0a00]/60">Status:</span>
                               <span className={`px-2.5 py-0.5 rounded-full font-semibold text-[9px] uppercase border inline-block ${
-                                order.paymentStatus === 'paid' ? 'bg-green-50 text-green-700 border-green-200' :
-                                order.paymentStatus === 'failed' ? 'bg-red-50 text-red-700 border-red-200' :
-                                'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                order.paymentStatus === 'paid'   ? 'bg-green-50  text-green-700  border-green-200' :
+                                order.paymentStatus === 'failed' ? 'bg-red-50    text-red-700    border-red-200' :
+                                                                   'bg-yellow-50 text-yellow-700 border-yellow-200'
                               }`}>
                                 {order.paymentStatus || 'pending'}
                               </span>
                             </div>
                             <p className="text-[#1a0a00]/60 mb-0.5">Gateway: <strong>Razorpay</strong></p>
                             {order.paymentId && (
-                              <p className="text-[#1a0a00]/60">
-                                Payment ID: <span className="font-mono bg-gray-50 px-1 py-0.5 border border-gray-100 rounded select-all text-gray-800">{order.paymentId}</span>
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="bg-white p-4 rounded-xl border border-[#1a0a00]/5 shadow-2xs">
-                            <h4 className="font-bold uppercase tracking-wider text-[#1a0a00]/40 text-[10px] mb-2">Fulfillment & Tracking</h4>
-                            {order.trackingId ? (
-                              <p className="leading-5">
-                                <span className="text-[#1a0a00]/60">AWB Tracking ID: </span>
-                                <span className="font-mono font-semibold bg-gray-50 px-1.5 py-0.5 border border-gray-100 rounded select-all text-gray-800">{order.trackingId}</span>
-                              </p>
-                            ) : (
-                              <p className="text-[#1a0a00]/50 italic leading-5">Awaiting courier shipment / tracking ID allocation.</p>
-                            )}
-                            {order.adminNote && (
-                              <div className="mt-2.5 p-2 bg-[#FFFDFB] border border-amber-100 rounded text-[11px] text-amber-800">
-                                <span className="font-semibold block mb-0.5">Note from Dada-Exports:</span>
-                                {order.adminNote}
-                              </div>
+                              <p className="text-[#1a0a00]/60">Payment ID: <span className="font-mono bg-gray-50 px-1 py-0.5 border border-gray-100 rounded select-all text-gray-800">{order.paymentId}</span></p>
                             )}
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  )}
 
-                  {/* Expand / Collapse Button */}
-                  <div className="border-t border-[#1a0a00]/5 text-center bg-[#FAF8F5]">
-                    <button
-                      onClick={() => toggleOrderExpand(order._id)}
-                      className="w-full py-3 text-[11px] font-bold tracking-widest text-[#281000]/60 hover:text-[#281000] hover:bg-[#1a0a00]/5 transition-colors"
-                    >
-                      {expandedOrders[order._id] ? 'HIDE ORDER DETAILS ▲' : 'VIEW ORDER DETAILS ▼'}
-                    </button>
+                        {order.adminNote && (
+                          <div className="p-3 bg-[#FFFDFB] border border-amber-100 rounded-xl text-[11px] text-amber-800">
+                            <span className="font-semibold block mb-0.5">Note from Dada-Exports:</span>
+                            {order.adminNote}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Expand/Collapse */}
+                    <div className="border-t border-[#1a0a00]/5 text-center bg-[#FAF8F5]">
+                      <button
+                        onClick={() => {
+                          toggleOrderExpand(order._id);
+                          // Auto-load tracking when expanding if trackingId exists and not loaded yet
+                          if (!expandedOrders[order._id] && canTrack && !tData) {
+                            fetchTracking(order._id);
+                          }
+                        }}
+                        className="w-full py-3 text-[11px] font-bold tracking-widest text-[#281000]/60 hover:text-[#281000] hover:bg-[#1a0a00]/5 transition-colors"
+                      >
+                        {expandedOrders[order._id] ? 'HIDE ORDER DETAILS ▲' : 'VIEW ORDER DETAILS ▼'}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
+
+        {/* ── Cancel Confirmation Modal ── */}
+        {cancelModal && (          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4">
+              <h3 className="text-[17px] font-bold text-[#1a0a00]">Cancel Order #{cancelModal.orderNum}?</h3>
+              <p className="text-[13px] text-[#1a0a00]/60 leading-relaxed">
+                This action cannot be undone. If payment was made, a refund will be initiated within 5–7 business days to your original payment method.
+              </p>
+              <div>
+                <label className="block text-[11px] font-semibold text-[#1a0a00]/50 uppercase tracking-wide mb-1.5">
+                  Reason for cancellation
+                </label>
+                <select
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3 text-[13px] text-[#1a0a00] bg-white outline-none focus:border-[#1a0a00] transition-colors"
+                >
+                  <option value="">Select a reason</option>
+                  <option value="Ordered by mistake">Ordered by mistake</option>
+                  <option value="Found a better price elsewhere">Found a better price elsewhere</option>
+                  <option value="Wrong item or size ordered">Wrong item or size ordered</option>
+                  <option value="Delivery time too long">Delivery time too long</option>
+                  <option value="Changed my mind">Changed my mind</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setCancelModal(null)}
+                  disabled={cancelling}
+                  className="flex-1 py-3 rounded-full border border-[#1a0a00]/15 text-[13px] font-semibold text-[#1a0a00]/60 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  Keep Order
+                </button>
+                <button
+                  onClick={confirmCancel}
+                  disabled={cancelling || !cancelReason}
+                  className="flex-1 py-3 rounded-full bg-red-500 hover:bg-red-600 text-white text-[13px] font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {cancelling ? (
+                    <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Cancelling…</>
+                  ) : 'Yes, Cancel Order'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Return / Exchange Modal ── */}
+        {returnModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+              <div>
+                <h3 className="text-[17px] font-bold text-[#1a0a00]">Return / Exchange Request</h3>
+                <p className="text-[12px] text-[#1a0a00]/50 mt-1">
+                  Order #{returnModal.order._id.slice(-8).toUpperCase()} · Within {RETURN_WINDOW_DAYS}-day return window
+                </p>
+              </div>
+
+              {/* Type toggle */}
+              <div className="flex gap-2">
+                {['return', 'exchange'].map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setReturnType(t)}
+                    className={`flex-1 py-2.5 rounded-xl text-[13px] font-bold border transition-all ${
+                      returnType === t
+                        ? 'bg-[#281000] text-white border-[#281000]'
+                        : 'bg-white text-[#1a0a00]/60 border-[#1a0a00]/15 hover:border-[#1a0a00]/40'
+                    }`}
+                  >
+                    {t === 'return' ? '↩ Return & Refund' : '🔄 Exchange'}
+                  </button>
+                ))}
+              </div>
+
+              {/* Items being returned */}
+              <div>
+                <p className="text-[11px] font-semibold text-[#1a0a00]/50 uppercase tracking-wide mb-2">Items in this order</p>
+                <div className="space-y-2">
+                  {returnModal.order.items?.map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 bg-[#FAF8F5] rounded-xl p-3 border border-[#1a0a00]/5">
+                      <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-gray-100">
+                        <Image src={item.image || '/retail/home/7.png'} alt={item.name} fill className="object-cover" unoptimized />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12px] font-semibold text-[#1a0a00] truncate">{item.name}</p>
+                        <p className="text-[11px] text-[#1a0a00]/40">{[item.size, item.color].filter(Boolean).join(' · ')} · Qty {item.quantity}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Reason */}
+              <div>
+                <label className="block text-[11px] font-semibold text-[#1a0a00]/50 uppercase tracking-wide mb-1.5">
+                  Reason *
+                </label>
+                <select
+                  value={returnReason}
+                  onChange={(e) => setReturnReason(e.target.value)}
+                  className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3 text-[13px] text-[#1a0a00] bg-white outline-none focus:border-[#1a0a00] transition-colors"
+                >
+                  <option value="">Select a reason</option>
+                  <option value="Size doesn't fit">Size doesn&apos;t fit</option>
+                  <option value="Wrong item received">Wrong item received</option>
+                  <option value="Product damaged or defective">Product damaged or defective</option>
+                  <option value="Not as described">Not as described</option>
+                  <option value="Changed my mind">Changed my mind</option>
+                  <option value="Quality not as expected">Quality not as expected</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              {/* Additional detail */}
+              <div>
+                <label className="block text-[11px] font-semibold text-[#1a0a00]/50 uppercase tracking-wide mb-1.5">
+                  Additional details <span className="font-normal">(optional)</span>
+                </label>
+                <textarea
+                  rows={3}
+                  value={returnDetail}
+                  onChange={(e) => setReturnDetail(e.target.value)}
+                  placeholder="Describe the issue in more detail..."
+                  className="w-full border border-[#1a0a00]/15 rounded-xl px-3 py-2.5 text-[13px] text-[#1a0a00] bg-white outline-none focus:border-[#1a0a00] transition-colors resize-none"
+                />
+              </div>
+
+              {/* Exchange for (only if exchange type) */}
+              {returnType === 'exchange' && (
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#1a0a00]/50 uppercase tracking-wide mb-1.5">
+                    Exchange for (size / variant)
+                  </label>
+                  <input
+                    type="text"
+                    value={exchangeFor}
+                    onChange={(e) => setExchangeFor(e.target.value)}
+                    placeholder="e.g. Size L, Blue color"
+                    className="w-full h-10 border border-[#1a0a00]/15 rounded-xl px-3 text-[13px] text-[#1a0a00] bg-white outline-none focus:border-[#1a0a00] transition-colors"
+                  />
+                </div>
+              )}
+
+              {/* Policy note */}
+              <div className="bg-[#FAF8F5] rounded-xl p-3 text-[11px] text-[#1a0a00]/60 leading-relaxed border border-[#1a0a00]/5">
+                {returnType === 'return'
+                  ? '↩ Refund will be processed within 5–7 business days after we receive the item. Original payment method will be credited.'
+                  : '🔄 Our team will review your exchange request and contact you within 2–3 business days with pickup & delivery details.'}
+              </div>
+
+              <div className="flex gap-3 pt-1">
+                <button
+                  onClick={() => setReturnModal(null)}
+                  disabled={submittingReturn}
+                  className="flex-1 py-3 rounded-full border border-[#1a0a00]/15 text-[13px] font-semibold text-[#1a0a00]/60 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={submitReturnRequest}
+                  disabled={submittingReturn || !returnReason}
+                  className="flex-1 py-3 rounded-full bg-[#281000] hover:bg-black text-white text-[13px] font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {submittingReturn ? (
+                    <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Submitting…</>
+                  ) : `Submit ${returnType === 'exchange' ? 'Exchange' : 'Return'} Request`}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

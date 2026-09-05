@@ -51,6 +51,10 @@ const OrderSchema = new mongoose.Schema(
     trackingId: String,
     adminNote:  String,
 
+    // cancellation
+    cancelReason: String,
+    cancelledAt:  Date,
+
     couponCode:     String,
     discountAmount: { type: Number, default: 0 },
 

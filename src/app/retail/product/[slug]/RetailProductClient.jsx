@@ -17,7 +17,18 @@ export default function RetailProductClient({ product, similar = [] }) {
     ];
 
   const prints = product.prints?.length ? product.prints : [];
-  const sizes = product.variants?.map((v) => v.size) || ['Small', 'Medium', 'Large'];
+
+  // Sort sizes: "Free Size" always first, then standard order, then custom labels
+  const SIZE_ORDER = ['Free Size', 'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+  const rawSizes = product.variants?.map((v) => v.size) || ['Small', 'Medium', 'Large'];
+  const sizes = [...rawSizes].sort((a, b) => {
+    const ai = SIZE_ORDER.indexOf(a);
+    const bi = SIZE_ORDER.indexOf(b);
+    if (ai !== -1 && bi !== -1) return ai - bi;
+    if (ai !== -1) return -1;
+    if (bi !== -1) return 1;
+    return a.localeCompare(b);
+  });
   const colors = product.colors?.length
     ? product.colors
     : [

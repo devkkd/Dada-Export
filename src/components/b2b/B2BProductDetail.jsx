@@ -9,9 +9,20 @@ export default function B2BProductDetail({ product, similar = [] }) {
     ? product.images
     : ['/b2b/NewArrivals/1.png'];
 
+  // Sort sizes: "Free Size" always first, then standard order, then custom labels
+  const SIZE_ORDER = ['Free Size', 'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+  const sortedSizes = [...(product.sizes || [])].sort((a, b) => {
+    const ai = SIZE_ORDER.indexOf(a);
+    const bi = SIZE_ORDER.indexOf(b);
+    if (ai !== -1 && bi !== -1) return ai - bi; // both known → use fixed order
+    if (ai !== -1) return -1;                   // only a known → a first
+    if (bi !== -1) return 1;                    // only b known → b after
+    return a.localeCompare(b);                  // both custom → alphabetical
+  });
+
   const [mainImage,    setMainImage]    = useState(images[0]);
   const [selectedColor, setSelectedColor] = useState(product.colors?.[0]?.hex || '');
-  const [selectedSize,  setSelectedSize]  = useState(product.sizes?.[0] || '');
+  const [selectedSize,  setSelectedSize]  = useState(sortedSizes[0] || '');
   const [quantity,      setQuantity]      = useState(product.moq || 50);
 
   const [cartToast, setCartToast] = useState(false);
@@ -122,11 +133,11 @@ export default function B2BProductDetail({ product, similar = [] }) {
             </div>
 
             {/* Size Selection */}
-            {product.sizes?.length > 0 && (
+            {sortedSizes.length > 0 && (
               <div className="mb-7">
                 <p className="text-sm font-medium mb-3 text-[#0E0E0E]">Size</p>
                 <div className="flex gap-2.5 flex-wrap">
-                  {product.sizes.map((size) => (
+                  {sortedSizes.map((size) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}

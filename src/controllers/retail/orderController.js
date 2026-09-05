@@ -60,3 +60,19 @@ export async function updateOrderStatus(id, { orderStatus, trackingId, adminNote
   if (paymentId !== undefined) update.paymentId = paymentId;
   return Order.findByIdAndUpdate(id, update, { new: true });
 }
+
+// customer: cancel their own order (only if placed/processing and belongs to them)
+export async function cancelOrder(orderId, userId, cancelReason) {
+  await connectDB();
+  const order = await Order.findById(orderId);
+  if (!order) throw new Error('Order not found');
+  if (String(order.userId) !== String(userId)) throw new Error('Unauthorized');
+  if (!['placed', 'processing'].includes(order.orderStatus)) {
+    throw new Error('Order cannot be cancelled — it has already been shipped or delivered');
+  }
+  order.orderStatus  = 'cancelled';
+  order.cancelReason = cancelReason || 'Cancelled by customer';
+  order.cancelledAt  = new Date();
+  await order.save();
+  return order;
+}

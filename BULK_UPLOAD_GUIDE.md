@@ -73,6 +73,12 @@ Format: pipe `|` separated bullet points
 | `moq` | `50` (minimum order qty) |
 | `sizes` | `XS,S,M,L,XL,2XL` (comma-separated) |
 
+**Free Size with custom labels:**
+```
+Free Size,36,38-40,40-42
+```
+If a product is "free size" with specific measurement labels, include `Free Size` first followed by custom labels.
+
 ---
 
 ## Retail Only
@@ -82,6 +88,12 @@ Format: pipe `|` separated bullet points
 | `mrp` | `2499` (original price before discount) |
 | `variants` | `S:20,M:30,L:25,XL:15` (size:stock) |
 | `prints` | `Floral,Paisley,Block Print` (comma-separated) |
+
+**Free Size with custom labels (Retail):**
+```
+Free Size:0,36:10,38-40:15,40-42:8
+```
+Each entry is `size_label:stock_count`. Include `Free Size:0` first, then custom measurement labels with their stock counts.
 
 ---
 

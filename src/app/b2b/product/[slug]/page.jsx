@@ -14,16 +14,21 @@ export async function generateMetadata({ params }) {
 
 export default async function B2BProductPage({ params }) {
   const { slug }   = await params;
-  const product    = await getB2BProductBySlug(slug);
-  if (!product) notFound();
+  const rawProduct = await getB2BProductBySlug(slug);
+  if (!rawProduct) notFound();
+
+  // Sanitize Mongoose docs → plain JSON (removes ObjectId / Date toJSON methods)
+  const product = JSON.parse(JSON.stringify(rawProduct));
 
   // Similar products: same category, exclude current
   const allInCat = await getB2BProducts({
-    category: product.category?._id || product.category,
+    category: rawProduct.category?._id || rawProduct.category,
   });
-  const similar = allInCat
-    .filter((p) => String(p._id) !== String(product._id))
-    .slice(0, 4);
+  const similar = JSON.parse(JSON.stringify(
+    allInCat
+      .filter((p) => String(p._id) !== String(rawProduct._id))
+      .slice(0, 4)
+  ));
 
   return <B2BProductDetail product={product} similar={similar} />;
 }

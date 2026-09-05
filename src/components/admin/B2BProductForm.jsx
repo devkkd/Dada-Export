@@ -6,6 +6,9 @@ import Image from 'next/image';
 
 const DEFAULT_SIZES = ['Free Size', 'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
 
+// Custom sizes are stored separately in form state and merged into sizes[] on submit
+// When "Free Size" is selected, admin can add custom labels like "36", "38-40", "S/M"
+
 const EMPTY_FORM = {
   name:             '',
   slug:             '',
@@ -87,6 +90,11 @@ export default function B2BProductForm({ product }) {
   const [categories, setCategories]     = useState([]);
   const [subcategories, setSubcategories] = useState([]);
 
+  // Custom sizes (shown when "Free Size" is selected)
+  // These are stored as separate entries in form.sizes alongside "Free Size"
+  // e.g. if admin adds "36", "38-40" → sizes = ["Free Size", "36", "38-40"]
+  const [customSizeInput, setCustomSizeInput] = useState('');
+
   // ui state
   const [saving, setSaving]     = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -125,6 +133,23 @@ export default function B2BProductForm({ product }) {
         ? f.sizes.filter((s) => s !== size)
         : [...f.sizes, size],
     }));
+  };
+
+  // Add a custom size label (only valid when Free Size is selected)
+  const addCustomSize = () => {
+    const val = customSizeInput.trim();
+    if (!val) return;
+    // Don't add duplicates or default sizes
+    setForm((f) => ({
+      ...f,
+      sizes: f.sizes.includes(val) ? f.sizes : [...f.sizes, val],
+    }));
+    setCustomSizeInput('');
+  };
+
+  // Remove a custom size (one that is not in DEFAULT_SIZES)
+  const removeCustomSize = (size) => {
+    setForm((f) => ({ ...f, sizes: f.sizes.filter((s) => s !== size) }));
   };
 
   // Fetch images from R2 by SKU
@@ -498,6 +523,62 @@ export default function B2BProductForm({ product }) {
             </button>
           ))}
         </div>
+
+        {/* Custom size labels — shown only when Free Size is selected */}
+        {form.sizes.includes('Free Size') && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <p className="text-xs font-medium text-gray-600 mb-2">
+              Custom Size Labels
+              <span className="ml-1 text-gray-400 font-normal">(optional — add specific labels like "36", "38-40", "S/M", "One Size")</span>
+            </p>
+
+            {/* Existing custom size tags */}
+            {form.sizes.filter((s) => !DEFAULT_SIZES.includes(s)).length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {form.sizes
+                  .filter((s) => !DEFAULT_SIZES.includes(s))
+                  .map((size) => (
+                    <span
+                      key={size}
+                      className="flex items-center gap-1.5 bg-[#95565E]/10 text-[#95565E] text-sm px-3 py-1 rounded-full border border-[#95565E]/20"
+                    >
+                      {size}
+                      <button
+                        type="button"
+                        onClick={() => removeCustomSize(size)}
+                        className="text-[#95565E]/60 hover:text-[#95565E] transition-colors leading-none"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+              </div>
+            )}
+
+            {/* Input to add new custom size */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={customSizeInput}
+                onChange={(e) => setCustomSizeInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCustomSize(); } }}
+                placeholder="e.g. 36, 38-40, S/M, One Size"
+                className={`${inputCls} flex-1`}
+              />
+              <button
+                type="button"
+                onClick={addCustomSize}
+                disabled={!customSizeInput.trim()}
+                className="px-4 py-2.5 rounded-xl bg-[#95565E] hover:bg-[#7f4750] text-white text-sm font-medium transition-colors disabled:opacity-40 whitespace-nowrap"
+              >
+                + Add
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 mt-2">
+              Leave empty to use "Free Size" as-is, or add labels for specific measurements.
+            </p>
+          </div>
+        )}
       </Section>
 
       {/* ── Section 6: Colors ────────────────────────────── */}

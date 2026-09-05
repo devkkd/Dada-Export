@@ -117,3 +117,36 @@ export async function createShiprocketOrder(order, packageDetails) {
     awbCode: awbCode ? String(awbCode) : null,
   };
 }
+
+// Track a shipment by AWB code
+// Returns courier activity events + current status
+export async function trackShipment(awbCode) {
+  const token = await getShiprocketToken();
+
+  const res = await fetch(
+    `https://apiv2.shiprocket.in/v1/external/courier/track/awb/${encodeURIComponent(awbCode)}`,
+    { headers: { 'Authorization': `Bearer ${token}` } }
+  );
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Shiprocket tracking failed');
+
+  // Normalise response — Shiprocket returns tracking_data.shipment_track_activities[]
+  const trackData      = data.tracking_data || {};
+  const shipmentTrack  = trackData.track_url || null;
+  const shipmentData   = trackData.shipment_track?.[0] || {};
+  const activities     = trackData.shipment_track_activities || [];
+
+  return {
+    currentStatus:   shipmentData.current_status || 'In Transit',
+    etd:             shipmentData.etd || null,            // estimated delivery date
+    courierName:     shipmentData.courier_name || null,
+    trackUrl:        shipmentTrack,
+    activities: activities.map((a) => ({
+      date:        a.date || '',
+      activity:    a.activity || '',
+      location:    a.location || '',
+      description: a['sr-status-label'] || a.activity || '',
+    })),
+  };
+}

@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
-import { getAllOrders } from '@/controllers/retail/orderController';
+import { NextResponse }    from 'next/server';
+import { getAllOrders }    from '@/controllers/retail/orderController';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { authOptions }    from '@/lib/auth';
+import Order              from '@/models/retail/Order';
 
 async function adminGuard() {
   const session = await getServerSession(authOptions);
@@ -17,17 +18,17 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const orders = await getAllOrders({ status: status === 'all' ? undefined : status });
-    
-    // Automatically self-heal any database records corrupted with literal "undefined" strings
+
+    // Self-heal records corrupted with literal "undefined" strings
     for (const order of orders) {
       if (order.shiprocketOrderId === 'undefined') {
         await Order.updateOne(
           { _id: order._id },
-          { $unset: { shiprocketOrderId: "", shiprocketShipmentId: "", trackingId: "" } }
+          { $unset: { shiprocketOrderId: '', shiprocketShipmentId: '', trackingId: '' } }
         );
-        order.shiprocketOrderId = undefined;
+        order.shiprocketOrderId    = undefined;
         order.shiprocketShipmentId = undefined;
-        order.trackingId = undefined;
+        order.trackingId           = undefined;
       }
     }
 
