@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import React, { useState } from 'react';
 import CheckoutDrawer from '@/components/retail/CheckoutDrawer';
+import ProductTrustSection from '@/components/retail/ProductTrustSection';
 import { useRetailAuth } from '@/context/RetailAuthContext';
 
 export default function RetailProductClient({ product, similar = [] }) {
@@ -21,7 +22,10 @@ export default function RetailProductClient({ product, similar = [] }) {
   // Sort sizes: "Free Size" always first, then standard order, then custom labels
   const SIZE_ORDER = ['Free Size', 'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
   const rawSizes = product.variants?.map((v) => v.size) || ['Small', 'Medium', 'Large'];
-  const sizes = [...rawSizes].sort((a, b) => {
+  const hasCustomSizes = rawSizes.some((s) => !SIZE_ORDER.includes(s));
+  // When custom sizes exist, do not show "Free Size" on the retail page
+  const filteredSizes = hasCustomSizes ? rawSizes.filter((s) => s !== 'Free Size') : rawSizes;
+  const sizes = [...filteredSizes].sort((a, b) => {
     const ai = SIZE_ORDER.indexOf(a);
     const bi = SIZE_ORDER.indexOf(b);
     if (ai !== -1 && bi !== -1) return ai - bi;
@@ -381,6 +385,11 @@ export default function RetailProductClient({ product, similar = [] }) {
               ))}
             </div>
 
+            {/* Desktop: Trust & Shipping Section filling the left blank space */}
+            <div className="hidden lg:block pt-3">
+              <ProductTrustSection product={product} />
+            </div>
+
           </div>
 
           {/* RIGHT: PRODUCT DETAILS */}
@@ -542,6 +551,11 @@ export default function RetailProductClient({ product, similar = [] }) {
                   Customization
                 </button>
               </div>
+            </div>
+
+            {/* Mobile: Trust & Shipping Section displayed below Add to Cart */}
+            <div className="block lg:hidden pt-2">
+              <ProductTrustSection product={product} />
             </div>
 
             {/* Highlights Table */}

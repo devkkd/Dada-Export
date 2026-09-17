@@ -59,14 +59,22 @@ export default function RetailProductForm({ product }) {
   const [skuFetching, setSkuFetching] = useState(false);
   const [skuFetchMsg, setSkuFetchMsg] = useState('');
 
-  const [variants, setVariants] = useState(
-    product?.variants?.length
-      ? product.variants
-      : DEFAULT_SIZES.map((size) => ({ size, stock: 0 }))
-  );
+  const [variants, setVariants] = useState(() => {
+    if (!product?.variants?.length) {
+      return DEFAULT_SIZES.map((size) => ({ size, stock: 0 }));
+    }
+    const hasCustom = product.variants.some((v) => !DEFAULT_SIZES.includes(v.size));
+    if (hasCustom) {
+      return product.variants.filter((v) => v.size !== FREE_SIZE);
+    }
+    return product.variants;
+  });
 
   // Custom size input (shown when Free Size variant is active)
   const [customSizeInput, setCustomSizeInput] = useState('');
+
+  const hasCustomSizes = variants.some((v) => !DEFAULT_SIZES.includes(v.size));
+  const isFreeSizeActive = variants.some((v) => v.size === FREE_SIZE) || hasCustomSizes;
 
   const [prints, setPrints]   = useState(product?.prints || []);
   const [printInput, setPrintInput] = useState('');
@@ -118,12 +126,17 @@ export default function RetailProductForm({ product }) {
   // Toggle a default size in/out of variants list
   const toggleVariantSize = (size) => {
     setVariants((prev) => {
+      if (size === FREE_SIZE) {
+        const currentlyActive = prev.some((v) => v.size === FREE_SIZE || !DEFAULT_SIZES.includes(v.size));
+        if (currentlyActive) {
+          // Remove Free Size AND all its custom children
+          return prev.filter((v) => DEFAULT_SIZES.includes(v.size) && v.size !== FREE_SIZE);
+        } else {
+          return [...prev, { size: FREE_SIZE, stock: 0 }];
+        }
+      }
       const exists = prev.find((v) => v.size === size);
       if (exists) {
-        // Remove this size AND all its custom children if it's Free Size
-        if (size === FREE_SIZE) {
-          return prev.filter((v) => DEFAULT_SIZES.includes(v.size) ? v.size !== FREE_SIZE : false);
-        }
         return prev.filter((v) => v.size !== size);
       } else {
         return [...prev, { size, stock: 0 }];
@@ -137,13 +150,22 @@ export default function RetailProductForm({ product }) {
     if (!val) return;
     // Don't duplicate
     if (variants.find((v) => v.size === val)) { setCustomSizeInput(''); return; }
-    setVariants((prev) => [...prev, { size: val, stock: 0 }]);
+    // When adding custom size, remove placeholder Free Size variant so Free Size doesn't show
+    setVariants((prev) => [...prev.filter((v) => v.size !== FREE_SIZE), { size: val, stock: 0 }]);
     setCustomSizeInput('');
   };
 
   // Remove a custom size variant
   const removeCustomVariant = (size) => {
-    setVariants((prev) => prev.filter((v) => v.size !== size));
+    setVariants((prev) => {
+      const next = prev.filter((v) => v.size !== size);
+      const remainingCustom = next.some((v) => !DEFAULT_SIZES.includes(v.size));
+      // If all custom sizes were removed and Free Size is not present, add Free Size variant back
+      if (!remainingCustom && !next.some((v) => v.size === FREE_SIZE)) {
+        return [...next, { size: FREE_SIZE, stock: 0 }];
+      }
+      return next;
+    });
   };
 
   const handleImageSelect = (e) => {
@@ -207,7 +229,9 @@ export default function RetailProductForm({ product }) {
         price:      form.price === '' ? 0 : Number(form.price),
         mrp:        form.mrp   === '' ? 0 : Number(form.mrp),
         images:     [...existingImages, ...newUrls],
-        variants:   variants.map((v) => ({ ...v, stock: Number(v.stock) })),
+        variants:   variants
+          .filter((v) => !(hasCustomSizes && v.size === FREE_SIZE))
+          .map((v) => ({ ...v, stock: Number(v.stock) })),
         prints,
         colors,
         highlights: highlights.filter((h) => h.label || h.value),
@@ -386,7 +410,7 @@ export default function RetailProductForm({ product }) {
         {/* Toggle buttons for default sizes */}
         <div className="flex flex-wrap gap-2 mb-4">
           {DEFAULT_SIZES.map((size) => {
-            const active = variants.some((v) => v.size === size);
+            const active = size === FREE_SIZE ? isFreeSizeActive : variants.some((v) => v.size === size);
             return (
               <button
                 key={size}
@@ -405,10 +429,10 @@ export default function RetailProductForm({ product }) {
         </div>
 
         {/* Stock inputs for active default sizes */}
-        {variants.filter((v) => DEFAULT_SIZES.includes(v.size)).length > 0 && (
+        {variants.filter((v) => DEFAULT_SIZES.includes(v.size) && !(v.size === FREE_SIZE && hasCustomSizes)).length > 0 && (
           <div className="space-y-2 mb-4">
             {variants
-              .filter((v) => DEFAULT_SIZES.includes(v.size))
+              .filter((v) => DEFAULT_SIZES.includes(v.size) && !(v.size === FREE_SIZE && hasCustomSizes))
               .map((v, _) => {
                 const globalIdx = variants.findIndex((x) => x.size === v.size);
                 return (
@@ -433,8 +457,8 @@ export default function RetailProductForm({ product }) {
           </div>
         )}
 
-        {/* Free Size custom labels — shown only when Free Size is toggled on */}
-        {variants.some((v) => v.size === FREE_SIZE) && (
+        {/* Free Size custom labels — shown only when Free Size is toggled on or custom sizes exist */}
+        {isFreeSizeActive && (
           <div className="mt-2 pt-4 border-t border-gray-100">
             <p className="text-xs font-medium text-gray-600 mb-2">
               Custom Size Labels for Free Size

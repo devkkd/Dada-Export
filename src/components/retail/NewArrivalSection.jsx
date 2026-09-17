@@ -46,7 +46,9 @@ export default function NewArrivalSection() {
       return;
     }
 
-    const defaultSize = product.variants?.[0]?.size || 'M';
+    const hasCustom = product.variants?.some((v) => !['Free Size', 'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'].includes(v.size));
+    const validVariants = hasCustom ? product.variants?.filter((v) => v.size !== 'Free Size') : product.variants;
+    const defaultSize = validVariants?.[0]?.size || 'M';
     const selectedColor = selectedColors[product._id] || product.colors?.[0]?.name || 'N/A';
 
     setCartSaving(prev => ({ ...prev, [product._id]: true }));

@@ -11,7 +11,10 @@ export default function B2BProductDetail({ product, similar = [] }) {
 
   // Sort sizes: "Free Size" always first, then standard order, then custom labels
   const SIZE_ORDER = ['Free Size', 'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
-  const sortedSizes = [...(product.sizes || [])].sort((a, b) => {
+  const rawSizes = product.sizes || [];
+  const hasCustomSizes = rawSizes.some((s) => !SIZE_ORDER.includes(s));
+  const filteredSizes = hasCustomSizes ? rawSizes.filter((s) => s !== 'Free Size') : rawSizes;
+  const sortedSizes = [...filteredSizes].sort((a, b) => {
     const ai = SIZE_ORDER.indexOf(a);
     const bi = SIZE_ORDER.indexOf(b);
     if (ai !== -1 && bi !== -1) return ai - bi; // both known → use fixed order
