@@ -27,9 +27,17 @@ const EMPTY_FORM = {
 };
 
 export default function RetailProductForm({ product }) {
-  const router  = useRouter();
-  const isEdit  = !!product;
-  const fileRef = useRef();
+  const router        = useRouter();
+  const [fromPage, setFromPage] = useState('');
+  const isEdit        = !!product;
+  const fileRef       = useRef();
+  
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const pageParam = urlParams.get('page');
+    console.log('[RetailForm] URL page param:', pageParam);
+    setFromPage(pageParam || '');
+  }, []);
 
   const [form, setForm] = useState(() => {
     if (!product) return EMPTY_FORM;
@@ -247,7 +255,13 @@ export default function RetailProductForm({ product }) {
       const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const json   = await res.json();
       if (!json.success) throw new Error(json.error || 'Save failed');
-      router.push('/admin/retail/products');
+      
+      // Return to products list with page number if available
+      if (fromPage) {
+        router.push(`/admin/retail/products?page=${fromPage}`);
+      } else {
+        router.back();
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -258,7 +272,13 @@ export default function RetailProductForm({ product }) {
 
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl space-y-8">
-      <button type="button" onClick={() => router.push('/admin/retail/products')}
+      <button type="button" onClick={() => {
+        if (fromPage) {
+          router.push(`/admin/retail/products?page=${fromPage}`);
+        } else {
+          router.back();
+        }
+      }}
         className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#95565E] transition-colors">
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -617,7 +637,13 @@ export default function RetailProductForm({ product }) {
 
       {/* Submit */}
       <div className="flex gap-3 pt-2">
-        <button type="button" onClick={() => router.push('/admin/retail/products')}
+        <button type="button" onClick={() => {
+          if (fromPage) {
+            router.push(`/admin/retail/products?page=${fromPage}`);
+          } else {
+            router.back();
+          }
+        }}
           className="px-6 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>
         <button type="submit" disabled={saving || uploading}
           className="px-8 py-3 rounded-xl bg-[#95565E] hover:bg-[#7f4750] text-white text-sm font-semibold transition-colors disabled:opacity-60 flex items-center gap-2">

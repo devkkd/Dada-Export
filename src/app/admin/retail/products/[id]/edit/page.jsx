@@ -1,22 +1,44 @@
+'use client';
+
+export const dynamic = 'force-dynamic';
+
 import AdminShell from '@/components/admin/AdminShell';
 import RetailProductForm from '@/components/admin/RetailProductForm';
-import { connectDB } from '@/lib/db';
-import RetailProduct from '@/models/retail/RetailProduct';
-import { notFound } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 
-export default async function EditRetailProductPage({ params }) {
-  const { id } = await params;
+export default function EditRetailProductPage() {
+  const { id } = useParams();
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  await connectDB();
-  const raw = await RetailProduct.findById(id).lean();
-  if (!raw) notFound();
+  useEffect(() => {
+    if (!id) return;
+    const fetchProduct = async () => {
+      try {
+        const res = await fetch(`/api/admin/retail/products/${id}`);
+        const json = await res.json();
+        if (json.success) {
+          setProduct(json.data);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProduct();
+  }, [id]);
 
-  // Serialize for client
-  const product = JSON.parse(JSON.stringify(raw));
+  if (loading) {
+    return (
+      <AdminShell title="Edit Retail Product">
+        <div className="text-center text-gray-500">Loading...</div>
+      </AdminShell>
+    );
+  }
 
   return (
     <AdminShell title="Edit Retail Product">
-      <RetailProductForm product={product} />
+      {product && <RetailProductForm product={product} />}
     </AdminShell>
   );
 }

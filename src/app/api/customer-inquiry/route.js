@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { submitCustomerInquiry, getAllCustomerInquiries } from '@/controllers/customerInquiryController';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { sendCustomerInquiryNotification } from '@/lib/mailer';
+import { sendCustomerInquiryNotification, sendCustomerInquiryConfirmation } from '@/lib/mailer';
 
 // POST /api/customer-inquiry — public (anyone can submit)
 export async function POST(request) {
@@ -10,9 +10,16 @@ export async function POST(request) {
     const body    = await request.json();
     const inquiry = await submitCustomerInquiry(body);
 
-    // Send email notification — non-blocking
-    sendCustomerInquiryNotification(inquiry.toObject ? inquiry.toObject() : inquiry)
-      .catch((err) => console.error('[mailer] customer inquiry notification failed:', err.message));
+    // Send emails — non-blocking
+    const inquiryData = inquiry.toObject ? inquiry.toObject() : inquiry;
+    
+    // Send to admin
+    sendCustomerInquiryNotification(inquiryData)
+      .catch((err) => console.error('[mailer] customer admin notification failed:', err.message));
+    
+    // Send confirmation to client
+    sendCustomerInquiryConfirmation(inquiryData)
+      .catch((err) => console.error('[mailer] customer confirmation failed:', err.message));
 
     return NextResponse.json({ success: true, data: inquiry }, { status: 201 });
   } catch (err) {

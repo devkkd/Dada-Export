@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import B2BProductForm from '@/components/admin/B2BProductForm';
 import AdminShell from '@/components/admin/AdminShell';
 

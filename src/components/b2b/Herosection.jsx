@@ -19,9 +19,9 @@ export default function HeroSection() {
 
   // Mobile images (change these paths later to your mobile-specific images)
   const heroImagesMobile = [
-      '/b2b/home/hero-4.png',
-    '/b2b/home/hero-5.png',
-    '/b2b/home/hero-6.png',
+      '/b2b/home/mobile-4.png',
+    '/b2b/home/mobile-5.png',
+    '/b2b/home/mobile-6.png',
   ];
 
   const [currentImage, setCurrentImage] = useState(0);

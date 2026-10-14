@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import AdminShell from '@/components/admin/AdminShell';
 
 export default function B2BProductsPage() {
+  const router = useRouter();
   const [products, setProducts] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [search, setSearch]     = useState('');
@@ -25,10 +27,35 @@ export default function B2BProductsPage() {
     }
   };
 
-  useEffect(() => { fetchProducts(); }, []);
+  // Initialize page from URL only once on mount
+  useEffect(() => {
+    fetchProducts();
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const pageParam = urlParams.get('page');
+    if (pageParam) {
+      const pageNum = parseInt(pageParam, 10);
+      if (!isNaN(pageNum) && pageNum > 0) {
+        console.log('[B2BProducts] Setting page from URL:', pageNum);
+        setPage(pageNum);
+      }
+    }
+  }, []);
 
-  // Reset to page 1 on search change
-  useEffect(() => { setPage(1); }, [search]);
+  // Only reset to page 1 when search changes (not on initial mount)
+  const handleSearch = (value) => {
+    setSearch(value);
+    setPage(1);
+    // Also update URL to page 1
+    router.push('/admin/b2b/products');
+  };
+
+  // Update URL when page changes
+  useEffect(() => {
+    if (page > 1) {
+      router.push(`/admin/b2b/products?page=${page}`, { scroll: false });
+    }
+  }, [page, router]);
 
   const filtered = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -80,7 +107,7 @@ export default function B2BProductsPage() {
           type="text"
           placeholder="Search products…"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => handleSearch(e.target.value)}
           className="w-full sm:w-80 pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#95565E]/30 focus:border-[#95565E] transition bg-white"
         />
       </div>
@@ -197,7 +224,7 @@ export default function B2BProductsPage() {
                           </svg>
                         </Link>
                         <Link
-                          href={`/admin/b2b/products/${product._id}/edit`}
+                          href={`/admin/b2b/products/${product._id}/edit?page=${page}`}
                           className="text-gray-400 hover:text-[#95565E] transition-colors p-1.5 rounded-lg hover:bg-rose-50"
                           title="Edit"
                         >

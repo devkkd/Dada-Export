@@ -27,9 +27,17 @@ const EMPTY_FORM = {
 };
 
 export default function B2BProductForm({ product }) {
-  const router   = useRouter();
-  const isEdit   = !!product;
+  const router        = useRouter();
+  const [fromPage, setFromPage] = useState('');
+  const isEdit        = !!product;
   const fileRef  = useRef();
+  
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const pageParam = urlParams.get('page');
+    console.log('[B2BForm] URL page param:', pageParam);
+    setFromPage(pageParam || '');
+  }, []);
 
   // ── form state ────────────────────────────────────────────────
   const [form, setForm] = useState(() => {
@@ -254,7 +262,12 @@ export default function B2BProductForm({ product }) {
       const json = await res.json();
       if (!json.success) throw new Error(json.error || 'Save failed');
 
-      router.push('/admin/b2b/products');
+      // Return to products list with page number if available
+      if (fromPage) {
+        router.push(`/admin/b2b/products?page=${fromPage}`);
+      } else {
+        router.back();
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -270,7 +283,13 @@ export default function B2BProductForm({ product }) {
       {/* Back */}
       <button
         type="button"
-        onClick={() => router.push('/admin/b2b/products')}
+        onClick={() => {
+          if (fromPage) {
+            router.push(`/admin/b2b/products?page=${fromPage}`);
+          } else {
+            router.back();
+          }
+        }}
         className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#95565E] transition-colors"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -724,7 +743,13 @@ export default function B2BProductForm({ product }) {
       <div className="flex gap-3 pt-2">
         <button
           type="button"
-          onClick={() => router.push('/admin/b2b/products')}
+          onClick={() => {
+            if (fromPage) {
+              router.push(`/admin/b2b/products?page=${fromPage}`);
+            } else {
+              router.back();
+            }
+          }}
           className="px-6 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
         >
           Cancel

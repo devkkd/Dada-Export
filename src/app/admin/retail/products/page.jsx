@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import AdminShell from '@/components/admin/AdminShell';
 
 export default function RetailProductsPage() {
+  const router = useRouter();
   const [products, setProducts] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [search, setSearch]     = useState('');
@@ -25,8 +27,35 @@ export default function RetailProductsPage() {
     }
   };
 
-  useEffect(() => { fetchProducts(); }, []);
-  useEffect(() => { setPage(1); }, [search]);
+  // Initialize page from URL only once on mount
+  useEffect(() => {
+    fetchProducts();
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const pageParam = urlParams.get('page');
+    if (pageParam) {
+      const pageNum = parseInt(pageParam, 10);
+      if (!isNaN(pageNum) && pageNum > 0) {
+        console.log('[RetailProducts] Setting page from URL:', pageNum);
+        setPage(pageNum);
+      }
+    }
+  }, []);
+  
+  // Only reset to page 1 when search changes (not on initial mount)
+  const handleSearch = (value) => {
+    setSearch(value);
+    setPage(1);
+    // Also update URL to page 1
+    router.push('/admin/retail/products');
+  };
+
+  // Update URL when page changes
+  useEffect(() => {
+    if (page > 1) {
+      router.push(`/admin/retail/products?page=${page}`, { scroll: false });
+    }
+  }, [page, router]);
 
   const filtered   = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -69,7 +98,7 @@ export default function RetailProductsPage() {
         <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
-        <input type="text" placeholder="Search products…" value={search} onChange={(e) => setSearch(e.target.value)}
+        <input type="text" placeholder="Search products…" value={search} onChange={(e) => handleSearch(e.target.value)}
           className="w-full sm:w-80 pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#95565E]/30 focus:border-[#95565E] transition bg-white" />
       </div>
 

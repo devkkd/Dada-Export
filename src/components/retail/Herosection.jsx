@@ -19,8 +19,8 @@ const heroImages = [
 
 // Mobile images (change these paths later to your mobile-specific images)
 const heroImagesMobile = [
-  '/retail/home/ivera.png',
-  '/retail/home/ivera2.png',
+  '/retail/home/mobile1.png',
+  '/retail/home/mobile2.png',
 ];
 
 const [currentImage, setCurrentImage] = useState(0);
